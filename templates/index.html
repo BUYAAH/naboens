@@ -1,0 +1,181 @@
+{% extends "main.html" %}
+
+{% block title %}Naboens Pizza — Grindsted{% endblock %}
+
+{% block content %}
+
+<!-- Navbar -->
+<nav class="site-nav">
+    <a href="#hero" class="nav-brand">Naboens.</a>
+    <ul class="nav-links">
+        <li><a href="#about">Om os</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#hours">Åbningstider</a></li>
+        <li><a href="#contact">Kontakt</a></li>
+    </ul>
+</nav>
+
+<!-- Hero -->
+<section id="hero" class="hero d-flex align-items-center justify-content-center text-center">
+    <div>
+        <p class="eyebrow">Napolitansk pizza. Hjemmelavet. Grindsted.</p>
+        <h1 class="brand">Naboens Pizza</h1>
+        <p class="tagline">Luftig dej. Gode råvarer. Fra køkkenet herhjemme.</p>
+        <a href="#menu" class="btn-outline-dark-custom mt-4">Se menukortet</a>
+    </div>
+</section>
+
+<!-- Divider -->
+<div class="section-divider"></div>
+
+<!-- Om os -->
+<section id="about" class="section-block row align-items-center g-5">
+    <div class="col-md-6">
+        <span class="label">Om projektet</span>
+        <h2 class="section-heading">En nabo med en ovn og for meget passion.</h2>
+        <p class="body-text">Naboens Pizza er et fritidsprojekt drevet af ægte kærlighed til napolitansk pizza. Dejen hæver i lang tid, råvarerne købes dagen før og bruges samme dag — og der laves ikke mere, end ovnen kan klare ordentligt.</p>
+        <p class="body-text">Det hele foregår hjemme fra køkkenet i Grindsted, i en elektrisk pizzaovn der når 509°C i kammeret. Det giver den afbagning, du normalt kun finder i Napoli. Alle regler fra Fødevarestyrelsen overholdes til punkt og prikke.</p>
+        <p class="body-text">Maks. 30 åbningsdage om året. Ingen stress, ingen kompromiser.</p>
+    </div>
+    <div class="col-md-6">
+        <div class="img-placeholder">
+            <span>Grindsted, 2024</span>
+        </div>
+    </div>
+</section>
+
+<!-- Divider -->
+<div class="section-divider"></div>
+
+<!-- Menu -->
+<section id="menu" class="section-block">
+    <div class="text-center mb-5">
+        <span class="label">Menukortet</span>
+        <h2 class="section-heading">Fem pizzaer. Ikke flere.</h2>
+        <p class="body-text mx-auto" style="max-width:480px;">Alle pizzaer er baseret på San Marzano-tomater, kvalitetsmozzarella og hjemmelavet dej med langtidshævning. Max 4 pizzaer pr. kunde pr. dag.</p>
+    </div>
+
+    <div class="menu-grid">
+
+        <div class="menu-item">
+            <div class="menu-item-header">
+                <span class="menu-name">Naboens Margherita</span>
+                <span class="menu-price">80 kr</span>
+            </div>
+            <p class="menu-desc">San Marzano tomatsauce · frisk mozzarella · friske basilikumsblade · let ekstra jomfruolivenolie</p>
+            <p class="menu-note">En tidløs klassiker, hvor råvarerne virkelig får lov at shine.</p>
+        </div>
+
+        <div class="menu-item">
+            <div class="menu-item-header">
+                <span class="menu-name">Naboens Rustica</span>
+                <span class="menu-price">90 kr</span>
+            </div>
+            <p class="menu-desc">Saftig italiensk salsiccia · San Marzano tomater · mozzarella · basilikum</p>
+            <p class="menu-note">Til dig der elsker dybde og lidt krydderi.</p>
+        </div>
+
+        <div class="menu-item">
+            <div class="menu-item-header">
+                <span class="menu-name">Naboens Calabrese</span>
+                <span class="menu-price">90 kr</span>
+            </div>
+            <p class="menu-desc">Italiensk Ventricina-salami · San Marzano tomater · mozzarella</p>
+            <p class="menu-note">Kant og varme — uden at være for stærk.</p>
+        </div>
+
+        <div class="menu-item">
+            <div class="menu-item-header">
+                <span class="menu-name">Naboens Tris di Formaggi</span>
+                <span class="menu-price">95 kr</span>
+            </div>
+            <p class="menu-desc">Mozzarella · Grana Padano · Gorgonzola · salsiccia · frisk rosmarin</p>
+            <p class="menu-note">Cremet, aromatisk og dyb i smagen — til osteglade sjæle.</p>
+        </div>
+
+        <div class="menu-item">
+            <div class="menu-item-header">
+                <span class="menu-name">Naboens Bambino</span>
+                <span class="menu-price">85 kr</span>
+            </div>
+            <p class="menu-desc">San Marzano tomater · mozzarella · cocktailpølser</p>
+            <p class="menu-note">Mild, hyggelig og altid et hit hos de små.</p>
+        </div>
+
+    </div>
+
+    <div class="discount-banner mt-5 text-center">
+        <span class="label">Åbningsrabat</span>
+        <p class="discount-text">De første 6 gange vi åbner: <strong>20% rabat på hele menukortet.</strong></p>
+        <p class="body-text" style="max-width:420px;margin-inline:auto;">For at få styr på flow, timing og teknik — og fordi vi er glade for at møde jer.</p>
+    </div>
+</section>
+
+<!-- Divider -->
+<div class="section-divider"></div>
+
+<!-- Åbningstider -->
+<section id="hours" class="section-block text-center">
+    <span class="label">Find os</span>
+    <h2 class="section-heading">Hvornår vi holder åbent</h2>
+    <p class="body-text mx-auto mb-4" style="max-width:460px;">Vi åbner ca. tre aftener om måneden — altid annonceret i Køb/salg-gruppen for Grindsted og via besked. Ingen fast plan, ingen reservation. Kom forbi.</p>
+    <div class="hours-grid mx-auto">
+        <div class="hours-row">
+            <span class="day">Næste åbning</span>
+            <span class="dots"></span>
+            <span class="time">Fre. 4. apr. &nbsp;·&nbsp; 17:00–21:00</span>
+        </div>
+        <div class="hours-row">
+            <span class="day">Derefter</span>
+            <span class="dots"></span>
+            <span class="time">Lør. 19. apr. &nbsp;·&nbsp; 16:00–21:00</span>
+        </div>
+        <div class="hours-row">
+            <span class="day">Og så</span>
+            <span class="dots"></span>
+            <span class="time closed">Annonceres løbende</span>
+        </div>
+    </div>
+    <p class="body-text mt-4" style="max-width:440px;margin-inline:auto;">
+        Afhentning ved adressen i Grindsted · Betaling på stedet · Følg med i gruppen for næste dato.
+    </p>
+</section>
+
+<!-- Divider -->
+<div class="section-divider"></div>
+
+<!-- Kontakt -->
+<section id="contact" class="section-block">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <span class="label">Sig hej</span>
+            <h2 class="section-heading">Skriv til os</h2>
+            <p class="body-text mb-4">Spørgsmål, catering eller vil du bare fortælle, at pizzaen var god? Vi hører gerne fra dig.</p>
+        </div>
+        <div class="col-md-6">
+            <form class="contact-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="name" class="form-label-custom">Navn</label>
+                    <input type="text" id="name" class="input-custom" placeholder="Dit navn">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label-custom">E-mail</label>
+                    <input type="email" id="email" class="input-custom" placeholder="din@email.dk">
+                </div>
+                <div class="mb-4">
+                    <label for="message" class="form-label-custom">Besked</label>
+                    <textarea id="message" class="input-custom" rows="4" placeholder="Hvad tænker du på?"></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Send besked</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer text-center">
+    <p>© 2024 Naboens Pizza &nbsp;·&nbsp; Grindsted &nbsp;·&nbsp; hej@naboens.dk</p>
+</footer>
+
+{% endblock %}

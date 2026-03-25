@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vedr. Pizza{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream:   #f5f2ed;
+            --warm:    #ede8e0;
+            --stone:   #b5aca0;
+            --charcoal:#2c2825;
+            --rust:    #a0522d;
+            --light-text: #7a726a;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--cream);
+            color: var(--charcoal);
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        /* ── Navbar ─────────────────────────────── */
+        .site-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 2.5rem;
+            background: rgba(44, 40, 37, 0.92);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--cream);
+            text-decoration: none;
+            letter-spacing: 0.04em;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 2.5rem;
+            margin: 0;
+        }
+
+        .nav-links a {
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--stone);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--cream); }
+
+        /* ── Hero ───────────────────────────────── */
+        .hero {
+            min-height: 100vh;
+            padding-top: 4rem;
+            background-color: var(--charcoal);
+            color: var(--cream);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, var(--cream));
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--stone);
+            margin-bottom: 1.25rem;
+        }
+
+        .brand {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 10vw, 7rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+            margin-bottom: 1rem;
+        }
+
+        .tagline {
+            font-size: 1.05rem;
+            color: var(--stone);
+            margin-bottom: 2rem;
+        }
+
+        .btn-outline-dark-custom {
+            display: inline-block;
+            padding: 0.7rem 2rem;
+            border: 1px solid var(--stone);
+            color: var(--cream);
+            text-decoration: none;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .btn-outline-dark-custom:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--cream);
+        }
+
+        /* ── Layout helpers ─────────────────────── */
+        .section-block {
+            padding: 6rem 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--warm);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--rust);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 400;
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
+        }
+
+        .body-text {
+            color: var(--light-text);
+            font-size: 0.975rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        /* ── About image placeholder ────────────── */
+        .img-placeholder {
+            background: var(--warm);
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem 1.25rem;
+        }
+
+        .img-placeholder span {
+            font-size: 0.75rem;
+            color: var(--stone);
+            font-style: italic;
+        }
+
+        /* ── Hours ──────────────────────────────── */
+        .hours-grid {
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .hours-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid var(--warm);
+        }
+
+        .hours-row:first-child { border-top: 1px solid var(--warm); }
+
+        .day {
+            font-size: 0.875rem;
+            white-space: nowrap;
+            color: var(--charcoal);
+        }
+
+        .dots {
+            flex: 1;
+            border-bottom: 1px dotted var(--stone);
+            margin-bottom: 4px;
+        }
+
+        .time {
+            font-size: 0.875rem;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .time.closed {
+            color: var(--stone);
+            font-weight: 300;
+        }
+
+        /* ── Contact form ───────────────────────── */
+        .contact-form { width: 100%; }
+
+        .form-label-custom {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--light-text);
+            margin-bottom: 0.4rem;
+        }
+
+        .input-custom {
+            width: 100%;
+            background: var(--warm);
+            border: 1px solid transparent;
+            padding: 0.75rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.925rem;
+            font-weight: 300;
+            color: var(--charcoal);
+            outline: none;
+            transition: border-color 0.2s;
+            resize: none;
+            display: block;
+        }
+
+        .input-custom::placeholder { color: var(--stone); }
+
+        .input-custom:focus {
+            border-color: var(--rust);
+            background: #eae4db;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--charcoal);
+            color: var(--cream);
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover { background: #1a1714; }
+
+        /* ── Menu ───────────────────────────────── */
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .menu-item {
+            padding: 1.75rem 0;
+            border-bottom: 1px solid var(--warm);
+        }
+
+        .menu-item:first-child { border-top: 1px solid var(--warm); }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .menu-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            font-weight: 400;
+        }
+
+        .menu-price {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--rust);
+            white-space: nowrap;
+        }
+
+        .menu-desc {
+            font-size: 0.875rem;
+            color: var(--light-text);
+            margin-bottom: 0.3rem;
+        }
+
+        .menu-note {
+            font-size: 0.8rem;
+            color: var(--stone);
+            font-style: italic;
+            margin: 0;
+        }
+
+        .discount-banner {
+            background: var(--warm);
+            padding: 2rem 1.5rem;
+        }
+
+        .discount-text {
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ── Footer ─────────────────────────────── */
+        .site-footer {
+            padding: 2.5rem 1rem;
+            font-size: 0.8rem;
+            color: var(--stone);
+            border-top: 1px solid var(--warm);
+        }
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
