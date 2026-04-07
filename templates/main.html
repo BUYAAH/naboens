@@ -6,6 +6,7 @@
     <title>{% block title %}Vedr. Pizza{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
             --cream:   #f5f2ed;
@@ -68,6 +69,49 @@
 
         .nav-links a:hover { color: var(--cream); }
 
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .nav-toggle span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--cream);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        @media (max-width: 640px) {
+            .site-nav { padding: 1rem 1.25rem; }
+
+            .nav-toggle { display: flex; }
+
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0; right: 0;
+                flex-direction: column;
+                gap: 0;
+                background: rgba(44, 40, 37, 0.98);
+                padding: 0.5rem 0 1rem;
+            }
+
+            .nav-links.open { display: flex; }
+
+            .nav-links li a {
+                display: block;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.8rem;
+            }
+        }
+
         /* ── Hero ───────────────────────────────── */
         .hero {
             min-height: 100vh;
@@ -112,6 +156,21 @@
             margin-bottom: 2rem;
         }
 
+        .btn-primary-dark {
+            display: inline-block;
+            padding: 0.85rem 2.5rem;
+            background: var(--charcoal);
+            color: var(--cream);
+            text-decoration: none;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-primary-dark:hover { background: #1a1614; }
+
         .btn-outline-dark-custom {
             display: inline-block;
             padding: 0.7rem 2rem;
@@ -132,10 +191,12 @@
 
         /* ── Layout helpers ─────────────────────── */
         .section-block {
-            padding: 6rem 1.5rem;
+            padding: 5rem 1.5rem;
             max-width: 900px;
             margin: 0 auto;
         }
+
+        #menu { padding-bottom: 3rem; }
 
         .section-divider {
             height: 1px;
@@ -170,18 +231,11 @@
         }
 
         /* ── About image placeholder ────────────── */
-        .img-placeholder {
-            background: var(--warm);
-            aspect-ratio: 4/3;
-            display: flex;
-            align-items: flex-end;
-            padding: 1rem 1.25rem;
-        }
-
-        .img-placeholder span {
-            font-size: 0.75rem;
-            color: var(--stone);
-            font-style: italic;
+        .about-img {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            display: block;
         }
 
         /* ── Hours ──────────────────────────────── */
@@ -283,11 +337,23 @@
         }
 
         .menu-item {
+            display: flex;
+            align-items: stretch;
+            gap: 1.25rem;
             padding: 1.75rem 0;
             border-bottom: 1px solid var(--warm);
         }
 
         .menu-item:first-child { border-top: 1px solid var(--warm); }
+
+        .menu-item-thumb {
+            width: 120px;
+            flex-shrink: 0;
+            object-fit: cover;
+            align-self: stretch;
+        }
+
+        .menu-item-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
 
         .menu-item-header {
             display: flex;
@@ -296,6 +362,8 @@
             gap: 1rem;
             margin-bottom: 0.4rem;
         }
+
+        .menu-name { flex: 1; }
 
         .menu-name {
             font-family: 'Playfair Display', serif;
@@ -338,12 +406,278 @@
             padding: 2.5rem 1rem;
             font-size: 0.8rem;
             color: var(--stone);
-            border-top: 1px solid var(--warm);
+            background: var(--charcoal);
+            border-top: none;
+        }
+
+        .footer-credit {
+            font-size: 0.7rem;
+            color: #4a4540;
+            margin-top: 0.35rem;
+        }
+
+        /* ── Bestil page ────────────────────────── */
+        .bestil-page {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 8rem 1.5rem 6rem;
+        }
+
+        .bestil-header { margin-bottom: 3rem; }
+
+        .bestil-empty { padding-top: 10rem; }
+
+        .form-error-banner {
+            background: #f9ebe6;
+            border-left: 3px solid var(--rust);
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: var(--rust);
+        }
+
+        .form-section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-hint {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: var(--stone);
+        }
+
+        /* Pizza rows */
+        .pizza-list { display: flex; flex-direction: column; }
+
+        .pizza-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.1rem 0;
+            border-bottom: 1px solid var(--warm);
+        }
+
+        .pizza-row:first-child { border-top: 1px solid var(--warm); }
+        .pizza-row:last-child { border-bottom: none; }
+
+        .pizza-row-img {
+            width: 120px;
+            object-fit: cover;
+            flex-shrink: 0;
+            align-self: stretch;
+        }
+
+        .pizza-row-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .pizza-info { flex: 1; }
+
+        @media (max-width: 540px) {
+            .pizza-row-img { width: 100px; }
+
+            .pizza-row-body {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.6rem;
+            }
+
+            .pizza-row-right { width: 100%; justify-content: space-between; }
+        }
+
+        .pizza-row-name {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .pizza-row-desc {
+            font-size: 0.8rem;
+            color: var(--light-text);
+        }
+
+        .pizza-row-right {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .pizza-row-price {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--rust);
+            min-width: 3rem;
+            text-align: right;
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            border: 1px solid var(--warm);
+        }
+
+        .stepper-btn {
+            width: 2rem;
+            height: 2rem;
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            color: var(--charcoal);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .stepper-btn:hover:not(:disabled) { background: var(--warm); }
+        .stepper-btn:disabled { color: var(--stone); cursor: default; }
+
+        .stepper-input {
+            width: 2rem;
+            height: 2rem;
+            text-align: center;
+            border: none;
+            border-left: 1px solid var(--warm);
+            border-right: 1px solid var(--warm);
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: var(--charcoal);
+            -moz-appearance: textfield;
+        }
+
+        .stepper-input::-webkit-inner-spin-button,
+        .stepper-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+        /* Order summary */
+        .order-summary {
+            background: var(--warm);
+            padding: 1.25rem 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            padding: 0.4rem 0;
+            color: var(--light-text);
+        }
+
+        .summary-row.highlight {
+            color: var(--charcoal);
+            font-weight: 500;
+            border-top: 1px solid var(--stone);
+            margin-top: 0.4rem;
+            padding-top: 0.75rem;
+        }
+
+        .contact-fields { max-width: 100%; }
+
+        .input-error { border-color: var(--rust) !important; }
+
+        .field-error {
+            font-size: 0.8rem;
+            color: var(--rust);
+            margin-top: 0.3rem;
+        }
+
+        .btn-submit:disabled {
+            background: var(--stone);
+            cursor: not-allowed;
+        }
+
+        /* ── Bekræftelse page ───────────────────── */
+        .bekraeftelse-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: var(--charcoal);
+            color: var(--cream);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .bekraeftelse-card {
+            max-width: 480px;
+            border: 1px solid var(--warm);
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .bk-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            padding: 0.55rem 0;
+            font-size: 0.9rem;
+        }
+
+        .bk-row.highlight {
+            background: var(--warm);
+            margin: 0 -2rem;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+        }
+
+        .bk-label { color: var(--light-text); }
+
+        .bk-value { font-weight: 400; text-align: right; }
+
+        .bk-divider {
+            height: 1px;
+            background: var(--warm);
+            margin: 0.5rem 0;
+        }
+
+        /* ── Opening banner (index) ─────────────── */
+        .opening-banner {
+            background: var(--charcoal);
+            color: var(--cream);
+            text-align: center;
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .opening-banner a {
+            color: var(--cream);
+            font-weight: 500;
+            text-decoration: underline;
+            text-underline-offset: 3px;
         }
     </style>
 </head>
 <body>
     {% block content %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true });</script>
+    <script>
+      document.querySelectorAll('.nav-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const links = btn.closest('.site-nav').querySelector('.nav-links');
+          links.classList.toggle('open');
+        });
+      });
+    </script>
 </body>
 </html>

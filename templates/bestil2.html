@@ -1,0 +1,428 @@
+{% extends "main.html" %}
+{% load danish_date %}
+
+{% block title %}Bestil (v2) — Naboens Pizza{% endblock %}
+
+{% block content %}
+
+<nav class="site-nav">
+  <a href="/" class="nav-brand">Naboens.</a>
+  <button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="/#about">Om os</a></li>
+    <li><a href="/#menu">Menu</a></li>
+    <li><a href="/#hours">Åbningstider</a></li>
+    <li><a href="/#contact">Kontakt</a></li>
+    <li><a href="{% url 'bestil2' %}" style="color:var(--cream);">Bestil</a></li>
+  </ul>
+</nav>
+
+<section class="bestil-page">
+
+  {% if not opening %}
+  <div class="bestil-empty text-center">
+    <span class="label">Bestilling</span>
+    <h1 class="section-heading">Ingen åbne dage lige nu</h1>
+    <p class="body-text mx-auto" style="max-width:420px;">
+      Vi åbner ca. tre gange om måneden. Følg med i Køb/salg-gruppen for Grindsted på Facebook.
+    </p>
+    <a href="/" class="btn-outline-dark-custom mt-4">Tilbage til forsiden</a>
+  </div>
+
+  {% else %}
+
+  <div class="bestil-header text-center">
+    <span class="label">Næste åbning</span>
+    <h1 class="section-heading">Bestil til {{ opening.date|date:"l d. F"|da }}</h1>
+    <p class="body-text">Kl. {{ opening.start_time|time:"H:i" }}–{{ opening.close_time|time:"H:i" }} &nbsp;·&nbsp; Afhentning i Grindsted &nbsp;·&nbsp; Betaling på stedet</p>
+  </div>
+
+  {% if form.non_field_errors %}
+  <div class="form-error-banner">
+    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" id="order-form">
+    {% csrf_token %}
+    <input type="hidden" name="slot_time" id="slot_time_input" value="{{ form.slot_time.value|default:'' }}">
+
+    <!-- ── Step 1: Pizzaer ────────────────────── -->
+    <div class="step-block">
+      <h2 class="form-section-title">
+        <span class="step-num">1</span> Hvad vil du have?
+        <span class="form-hint">(max 4 i alt)</span>
+      </h2>
+
+      <div class="pizza-list">
+        {% for pf in pizzas_with_fields %}
+        <div class="pizza-row">
+          {% if pf.pizza.image %}
+          <img src="{{ pf.pizza.image.url }}" alt="{{ pf.pizza.name }}" class="pizza-row-img">
+          {% endif %}
+          <div class="pizza-row-body">
+            <div class="pizza-info">
+              <span class="pizza-row-name">{{ pf.pizza.name }}</span>
+              <span class="pizza-row-desc">{{ pf.pizza.description }}</span>
+            </div>
+            <div class="pizza-row-right">
+              <span class="pizza-row-price">{{ pf.pizza.price }} kr</span>
+              <div class="stepper">
+                <button type="button" class="stepper-btn minus" data-field="{{ pf.field.html_name }}">−</button>
+                <input type="number" name="{{ pf.field.html_name }}" id="{{ pf.field.html_name }}"
+                       value="{{ pf.field.value|default:0 }}" min="0" max="4" class="stepper-input" readonly>
+                <button type="button" class="stepper-btn plus" data-field="{{ pf.field.html_name }}">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Step 2: Tidslinje ──────────────────── -->
+    <div class="step-block" id="step-timeline" style="display:none;">
+      <h2 class="form-section-title">
+        <span class="step-num">2</span> Hvornår vil du hente?
+      </h2>
+      <p class="body-text" id="timeline-hint">Svæv over tidslinjen for at vælge dit afhentningstidspunkt.</p>
+
+      {% if form.slot_time.errors %}
+      <p class="field-error mb-2">{{ form.slot_time.errors.0 }}</p>
+      {% endif %}
+
+      <div class="timeline-outer">
+        <div class="timeline-bar" id="timeline-bar"></div>
+        <div class="timeline-labels" id="timeline-labels"></div>
+      </div>
+
+      <div class="timeline-selected" id="timeline-selected" style="display:none;">
+        <span class="timeline-selected-label">Valgt tidspunkt:</span>
+        <span class="timeline-selected-time" id="timeline-selected-time">—</span>
+        <button type="button" class="timeline-clear-btn" id="timeline-clear">Fortryd</button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Kontakt ────────────────────── -->
+    <div class="step-block" id="step-contact" style="display:none;">
+      <h2 class="form-section-title">
+        <span class="step-num">3</span> Dine oplysninger
+      </h2>
+      <div class="mb-3">
+        <label for="name" class="form-label-custom">Navn</label>
+        <input type="text" name="name" id="name" class="input-custom {% if form.name.errors %}input-error{% endif %}"
+               value="{{ form.name.value|default:'' }}" placeholder="Navn">
+        {% if form.name.errors %}<p class="field-error">{{ form.name.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="mb-4">
+        <label for="phone" class="form-label-custom">Telefonnummer</label>
+        <input type="tel" name="phone" id="phone" class="input-custom {% if form.phone.errors %}input-error{% endif %}"
+               value="{{ form.phone.value|default:'' }}" placeholder="Så vi kan kontakte dig ved behov">
+        {% if form.phone.errors %}<p class="field-error">{{ form.phone.errors.0 }}</p>{% endif %}
+      </div>
+      <button type="submit" class="btn-submit" id="submit-btn" disabled>Afgiv bestilling</button>
+    </div>
+
+  </form>
+  {% endif %}
+
+</section>
+
+{% include "_footer.html" %}
+
+<style>
+  .step-block {
+    margin-bottom: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--warm);
+  }
+  .step-block:last-of-type { border-bottom: none; }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--charcoal);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  /* Timeline */
+  .timeline-outer {
+    margin-top: 1.5rem;
+  }
+
+  .timeline-bar {
+    display: flex;
+    gap: 2px;
+    cursor: crosshair;
+    user-select: none;
+    width: 100%;
+  }
+
+  .tl-block {
+    flex: 1;
+    min-width: 4px;
+    height: 48px;
+    transition: background 0.08s;
+  }
+
+  .tl-available  { background: var(--warm); }
+  .tl-taken      { background: var(--stone); opacity: 0.5; cursor: not-allowed; }
+  .tl-hover      { background: #4a7c4a; }
+  .tl-hover-bad  { background: #c0392b; opacity: 0.7; }
+  .tl-selected   { background: var(--charcoal); }
+
+  .timeline-labels {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .tl-label-cell {
+    flex: 1;
+    min-width: 4px;
+    font-size: 0.65rem;
+    color: var(--stone);
+    white-space: nowrap;
+    overflow: visible;
+  }
+
+  /* Selected banner */
+  .timeline-selected {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding: 0.85rem 1.25rem;
+    background: var(--charcoal);
+    color: var(--cream);
+  }
+
+  .timeline-selected-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+
+  .timeline-selected-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    flex: 1;
+  }
+
+  .timeline-clear-btn {
+    background: none;
+    border: 1px solid var(--stone);
+    color: var(--stone);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .timeline-clear-btn:hover { border-color: var(--cream); color: var(--cream); }
+</style>
+
+<script>
+  const TL               = {{ timeline_json|default:"{}"|safe }};
+  const PIZZAS           = {{ pizzas_json|default:"[]"|safe }};
+  const PRESELECTED_SLOT = "{{ form.slot_time.value|default:'' }}";
+
+  let pizzaCount    = 0;
+  let hoverIndex    = -1;
+  let selectedIndex = -1;
+
+  const takenSet   = new Set(TL.taken_offsets || []);
+  const totalBlocks = (TL.total_minutes || 0) / 5;
+
+  /* ── Helpers ───────────────────────────── */
+  function offsetToTime(offsetMinutes) {
+    const totalMin = TL.start_hour * 60 + TL.start_minute + offsetMinutes;
+    const h = Math.floor(totalMin / 60) % 24;
+    const m = totalMin % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  function windowHasConflict(endIndex) {
+    for (let i = endIndex - pizzaCount + 1; i <= endIndex; i++) {
+      if (takenSet.has(i * 5)) return true;
+    }
+    return false;
+  }
+
+  function windowFitsInOpening(endIndex) {
+    return endIndex - pizzaCount + 1 >= 0 && endIndex < totalBlocks;
+  }
+
+  function scrollToEl(el) {
+    const navHeight = document.querySelector('.site-nav')?.offsetHeight || 0;
+    const top = el.getBoundingClientRect().top + window.scrollY - navHeight - 24;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }
+
+  /* ── Build timeline ────────────────────── */
+  function buildTimeline() {
+    const bar    = document.getElementById('timeline-bar');
+    const labels = document.getElementById('timeline-labels');
+    bar.innerHTML    = '';
+    labels.innerHTML = '';
+
+    for (let i = 0; i < totalBlocks; i++) {
+      const block = document.createElement('div');
+      block.className = 'tl-block';
+      block.dataset.index = i;
+
+      block.addEventListener('mouseenter', () => {
+        if (selectedIndex >= 0) return;
+        if (!windowFitsInOpening(i)) { hoverIndex = -1; renderBlocks(); return; }
+        hoverIndex = i;
+        renderBlocks();
+      });
+
+      block.addEventListener('mouseleave', () => {
+        if (selectedIndex >= 0) return;
+        hoverIndex = -1;
+        renderBlocks();
+      });
+
+      block.addEventListener('click', () => {
+        if (!windowFitsInOpening(i)) return;
+        if (windowHasConflict(i)) return;
+        selectIndex(i);
+      });
+
+      bar.appendChild(block);
+
+      const labelCell = document.createElement('div');
+      labelCell.className = 'tl-label-cell';
+      if (i % 6 === 0) labelCell.textContent = offsetToTime(i * 5);
+      labels.appendChild(labelCell);
+    }
+
+    renderBlocks();
+
+    if (PRESELECTED_SLOT) {
+      const [h, m] = PRESELECTED_SLOT.split(':').map(Number);
+      const offsetMin = (h * 60 + m) - (TL.start_hour * 60 + TL.start_minute);
+      const pickupIdx = offsetMin / 5 + pizzaCount - 1;
+      if (pickupIdx >= 0 && pickupIdx < totalBlocks) selectIndex(pickupIdx, true);
+    }
+  }
+
+  function renderBlocks() {
+    const blocks = document.querySelectorAll('.tl-block');
+    blocks.forEach((block, i) => {
+      const taken    = takenSet.has(i * 5);
+      const inSelect = selectedIndex >= 0 && i >= selectedIndex - pizzaCount + 1 && i <= selectedIndex;
+      const inHover  = hoverIndex   >= 0 && i >= hoverIndex   - pizzaCount + 1 && i <= hoverIndex;
+
+      block.className = 'tl-block';
+      if (inSelect) {
+        block.classList.add('tl-selected');
+      } else if (taken) {
+        block.classList.add('tl-taken');
+      } else if (inHover) {
+        block.classList.add(windowHasConflict(hoverIndex) ? 'tl-hover-bad' : 'tl-hover');
+      } else {
+        block.classList.add('tl-available');
+      }
+    });
+  }
+
+  function selectIndex(i, silent = false) {
+    selectedIndex = i;
+    hoverIndex    = -1;
+    const pickupTime = offsetToTime(i * 5);
+    const cookStart  = offsetToTime((i - pizzaCount + 1) * 5);
+    document.getElementById('slot_time_input').value = cookStart;
+    document.getElementById('timeline-selected-time').textContent = `kl. ${pickupTime}`;
+    document.getElementById('timeline-selected').style.display = '';
+    renderBlocks();
+
+    const stepContact = document.getElementById('step-contact');
+    stepContact.style.display = '';
+    document.getElementById('submit-btn').disabled = false;
+  }
+
+  document.getElementById('timeline-clear')?.addEventListener('click', () => {
+    selectedIndex = -1;
+    document.getElementById('slot_time_input').value = '';
+    document.getElementById('timeline-selected').style.display = 'none';
+    document.getElementById('step-contact').style.display = 'none';
+    document.getElementById('submit-btn').disabled = true;
+    renderBlocks();
+  });
+
+  /* ── Stepper ───────────────────────────── */
+  function getTotal() {
+    return PIZZAS.reduce((sum, p) => sum + parseInt(document.getElementById(p.field)?.value || 0, 10), 0);
+  }
+
+  function onPizzaChange() {
+    pizzaCount = getTotal();
+
+    PIZZAS.forEach(p => {
+      const plusBtn = document.querySelector(`.stepper-btn.plus[data-field="${p.field}"]`);
+      if (plusBtn) plusBtn.disabled = pizzaCount >= 4;
+    });
+
+    const stepTimeline = document.getElementById('step-timeline');
+    if (pizzaCount > 0) {
+      if (stepTimeline.style.display === 'none') {
+        stepTimeline.style.display = '';
+      }
+      document.getElementById('timeline-hint').textContent =
+        `Svæv over tidslinjen og vælg hvornår du vil hente dine ${pizzaCount} pizza${pizzaCount !== 1 ? 'er' : ''}.`;
+    } else {
+      stepTimeline.style.display = 'none';
+      document.getElementById('step-contact').style.display = 'none';
+    }
+
+    if (selectedIndex >= 0) {
+      selectedIndex = -1;
+      document.getElementById('slot_time_input').value = '';
+      document.getElementById('timeline-selected').style.display = 'none';
+      document.getElementById('step-contact').style.display = 'none';
+      document.getElementById('submit-btn').disabled = true;
+    }
+
+    renderBlocks();
+  }
+
+  document.querySelectorAll('.stepper-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.field;
+      const input = document.getElementById(field);
+      let val = parseInt(input.value, 10);
+      if (btn.classList.contains('plus')  && val < 4 && getTotal() < 4) val++;
+      if (btn.classList.contains('minus') && val > 0) val--;
+      input.value = val;
+      onPizzaChange();
+    });
+  });
+
+  buildTimeline();
+
+  if (PRESELECTED_SLOT) {
+    pizzaCount = getTotal();
+    if (pizzaCount > 0) {
+      document.getElementById('step-timeline').style.display = '';
+      document.getElementById('step-contact').style.display = '';
+      document.getElementById('submit-btn').disabled = false;
+    }
+  }
+</script>
+
+{% endblock %}

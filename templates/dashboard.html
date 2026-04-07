@@ -1,0 +1,124 @@
+{% extends "main.html" %}
+{% load danish_date %}
+
+{% block title %}Dashboard — Naboens Pizza{% endblock %}
+
+{% block content %}
+
+<nav class="site-nav">
+  <a href="/" class="nav-brand">Naboens.</a>
+  <ul class="nav-links">
+    <li><a href="/">Forside</a></li>
+    <li><a href="/admin/">Admin</a></li>
+  </ul>
+</nav>
+
+<section class="bestil-page">
+  <div class="bestil-header text-center">
+    <span class="label">Pizzamaker</span>
+    <h1 class="section-heading">Vælg en åbningsdag</h1>
+  </div>
+
+  <div class="dag-list">
+    {% for day in upcoming %}
+    <a href="{% url 'opening_day' day.pk %}" class="dag-card {% if not day.is_published %}dag-card--unpublished{% endif %}">
+      <div class="dag-card-left">
+        <span class="dag-card-date">{{ day.date|date:"l d. F Y"|da }}</span>
+        <span class="dag-card-time">{{ day.start_time|time:"H:i" }} – {{ day.close_time|time:"H:i" }}</span>
+      </div>
+      <div class="dag-card-right">
+        <span class="dag-card-count">{{ day.total_pizzas_ordered }} pizzaer</span>
+        {% if not day.is_published %}
+        <span class="dag-card-badge">Ikke publiceret</span>
+        {% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <p class="body-text text-center">Ingen kommende åbningsdage oprettet endnu.</p>
+    {% endfor %}
+
+    {% if past %}
+    <div class="dag-list-divider">Tidligere</div>
+    {% for day in past %}
+    <a href="{% url 'opening_day' day.pk %}" class="dag-card dag-card--past {% if not day.is_published %}dag-card--unpublished{% endif %}">
+      <div class="dag-card-left">
+        <span class="dag-card-date">{{ day.date|date:"l d. F Y"|da }}</span>
+        <span class="dag-card-time">{{ day.start_time|time:"H:i" }} – {{ day.close_time|time:"H:i" }}</span>
+      </div>
+      <div class="dag-card-right">
+        <span class="dag-card-count">{{ day.total_pizzas_ordered }} pizzaer</span>
+        {% if not day.is_published %}
+        <span class="dag-card-badge">Ikke publiceret</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .dag-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .dag-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.5rem;
+    background: var(--warm);
+    border: 2px solid transparent;
+    text-decoration: none;
+    color: var(--charcoal);
+    transition: border-color 0.15s;
+  }
+
+  .dag-card:hover { border-color: var(--charcoal); }
+  .dag-card--unpublished { opacity: 0.55; }
+
+  .dag-card-left { display: flex; flex-direction: column; gap: 0.2rem; }
+
+  .dag-card-date {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+  }
+
+  .dag-card-time {
+    font-size: 0.8rem;
+    color: var(--stone);
+  }
+
+  .dag-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; }
+
+  .dag-card-count {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .dag-card--past { opacity: 0.4; }
+  .dag-card--past:hover { opacity: 0.7; }
+
+  .dag-list-divider {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--stone);
+    padding: 1.25rem 0 0.25rem;
+  }
+
+  .dag-card-badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+</style>
+
+{% endblock %}

@@ -1,0 +1,427 @@
+{% extends "main.html" %}
+{% load danish_date %}
+
+{% block title %}{{ opening.date|date:"d. F"|da }} — Naboens Pizza{% endblock %}
+
+{% block content %}
+
+<nav class="site-nav">
+  <a href="/" class="nav-brand">Naboens.</a>
+  <ul class="nav-links">
+    <li><a href="{% url 'dashboard' %}">← Alle dage</a></li>
+    <li><a href="/admin/">Admin</a></li>
+  </ul>
+</nav>
+
+<section class="bestil-page">
+
+  <!-- ── Header ──────────────────────────────────────── -->
+  <div class="dag-header">
+    <div>
+      <span class="label">Pizzamaker · Dashboard</span>
+      <h1 class="section-heading" style="margin-bottom:0.25rem;">{{ opening.date|date:"l d. F Y"|da }}</h1>
+      <p class="body-text" style="margin:0;">Kl. {{ opening.start_time|time:"H:i" }}–{{ opening.close_time|time:"H:i" }}</p>
+    </div>
+    {% if not opening.is_published %}
+    <span class="dag-status-badge">Ikke publiceret</span>
+    {% endif %}
+  </div>
+
+  <!-- ── Stat cards ──────────────────────────────────── -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ orders|length }}</span>
+      <span class="stat-label">Bestillinger</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ total_tak }}</span>
+      <span class="stat-label">Pizzaer i alt</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ capacity_pct }}%</span>
+      <span class="stat-label">Kapacitet brugt</span>
+      <div class="stat-bar-track">
+        <div class="stat-bar-fill {% if capacity_pct >= 80 %}fill-high{% elif capacity_pct >= 40 %}fill-mid{% endif %}"
+             style="width: {{ capacity_pct }}%"></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ total_cap }}</span>
+      <span class="stat-label">Kapacitet total</span>
+    </div>
+  </div>
+
+  <!-- ── Orders ──────────────────────────────────────── -->
+  <div class="dag-section">
+    <h2 class="dag-section-title">Bestillinger</h2>
+
+    {% if orders %}
+    <div class="order-cards">
+      {% for order in orders %}
+      <div class="order-card">
+        <div class="order-card-time">{{ order.pickup_time|time:"H:i" }}</div>
+        <div class="order-card-body">
+          <div class="order-card-customer">
+            <span class="order-card-name">{{ order.name }}</span>
+            <a href="tel:{{ order.phone }}" class="order-card-phone">{{ order.phone }}</a>
+          </div>
+          <ul class="order-card-items">
+            {% for item in order.items.all %}
+            <li><span class="item-qty">{{ item.quantity }}×</span> {{ item.pizza.name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="order-card-total">{{ order.total_pizzas }} stk</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="body-text">Ingen bestillinger endnu.</p>
+    {% endif %}
+  </div>
+
+  <!-- ── Pizza totals ─────────────────────────────────── -->
+  {% if pizza_totals %}
+  <div class="dag-section">
+    <h2 class="dag-section-title">Pizzaoversigt</h2>
+    <div class="pizza-totals-grid">
+      {% for pizza, qty in pizza_totals.items %}
+      <div class="pizza-total-card">
+        <span class="pizza-total-qty">{{ qty }}</span>
+        <span class="pizza-total-name">{{ pizza.name }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Ingredient shopping list ─────────────────────── -->
+  {% if ingredient_totals %}
+  <div class="dag-section">
+    <h2 class="dag-section-title">Indkøbsliste</h2>
+    <div class="ingredient-list">
+      {% for pair in ingredient_totals %}
+      <div class="ingredient-row">
+        <span class="ingredient-name">{{ pair.0.0 }}</span>
+        <span class="ingredient-qty">{{ pair.1|floatformat:"-2" }} {{ pair.0.1 }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="dag-section">
+    <h2 class="dag-section-title">Indkøbsliste</h2>
+    <p class="body-text">Ingen ingredienser registreret på pizzaerne endnu. Tilføj dem via admin → Pizzaer.</p>
+  </div>
+  {% endif %}
+
+  <!-- ── Økonomi ──────────────────────────────────────── -->
+  {% if pizza_financials %}
+  <div class="dag-section">
+    <h2 class="dag-section-title">Økonomi</h2>
+
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Pizza</th>
+          <th class="fin-num">Antal</th>
+          <th class="fin-num">Pris/stk</th>
+          <th class="fin-num">Omsætning</th>
+          {% if cost_known %}<th class="fin-num">Råvarer</th>
+          <th class="fin-num">Fortjeneste</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in pizza_financials %}
+        <tr>
+          <td>{{ r.pizza.name }}</td>
+          <td class="fin-num">{{ r.qty }}</td>
+          <td class="fin-num">{{ r.pizza.price }} kr</td>
+          <td class="fin-num">{{ r.revenue }} kr</td>
+          {% if cost_known %}
+          <td class="fin-num">{% if r.cost is not None %}{{ r.cost }} kr{% else %}—{% endif %}</td>
+          <td class="fin-num {% if r.profit is not None and r.profit >= 0 %}fin-pos{% elif r.profit is not None %}fin-neg{% endif %}">
+            {% if r.profit is not None %}{{ r.profit }} kr{% else %}—{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">I alt</td>
+          <td class="fin-num fin-total">{{ total_revenue }} kr</td>
+          {% if cost_known %}
+          <td class="fin-num fin-total">{{ total_cost }} kr</td>
+          <td class="fin-num fin-total fin-pos">{{ total_profit }} kr</td>
+          {% endif %}
+        </tr>
+      </tfoot>
+    </table>
+
+    {% if not cost_known %}
+    <p class="body-text mt-3" style="color:var(--stone);font-size:0.85rem;">Tilføj råvarepriser på pizzaerne i admin for at se fortjeneste.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</section>
+
+<style>
+  /* ── Layout ─────────────────────────────── */
+  .dag-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .dag-status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--warm);
+    color: var(--stone);
+    border: 1px solid var(--stone);
+    align-self: flex-start;
+    margin-top: 0.5rem;
+  }
+
+  .dag-section {
+    margin-bottom: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--warm);
+  }
+  .dag-section:last-child { border-bottom: none; }
+
+  .dag-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--charcoal);
+    margin-bottom: 1.25rem;
+  }
+
+  /* ── Stat cards ─────────────────────────── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: var(--warm);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--charcoal);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+
+  .stat-bar-track {
+    height: 4px;
+    background: var(--stone);
+    opacity: 0.3;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    position: relative;
+  }
+
+  .stat-bar-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--stone);
+    opacity: 1;
+  }
+  .stat-bar-fill.fill-mid  { background: #6b8f6b; opacity: 1; }
+  .stat-bar-fill.fill-high { background: var(--rust); opacity: 1; }
+
+  /* ── Finance table ──────────────────────── */
+  .fin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .fin-table th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--stone);
+    padding: 0 0.75rem 0.75rem 0;
+    border-bottom: 2px solid var(--warm);
+    text-align: left;
+  }
+
+  .fin-table td {
+    padding: 0.65rem 0.75rem 0.65rem 0;
+    border-bottom: 1px solid var(--warm);
+    color: var(--charcoal);
+  }
+
+  .fin-table tfoot td {
+    border-bottom: none;
+    border-top: 2px solid var(--charcoal);
+    padding-top: 0.75rem;
+    font-weight: 600;
+  }
+
+  .fin-num { text-align: right; }
+  .fin-num.fin-total { font-weight: 700; }
+  .fin-pos { color: #4a7c4a; }
+  .fin-neg { color: var(--rust); }
+
+  /* ── Order cards ────────────────────────── */
+  .order-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .order-card {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr 3.5rem;
+    align-items: start;
+    gap: 1rem;
+    background: var(--warm);
+    padding: 1rem 1.25rem;
+  }
+
+  .order-card-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--charcoal);
+    padding-top: 0.1rem;
+  }
+
+  .order-card-body { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .order-card-customer {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .order-card-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .order-card-phone {
+    font-size: 0.82rem;
+    color: var(--stone);
+    text-decoration: none;
+  }
+  .order-card-phone:hover { color: var(--charcoal); }
+
+  .order-card-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1rem;
+  }
+
+  .order-card-items li {
+    font-size: 0.85rem;
+    color: var(--charcoal);
+  }
+
+  .item-qty {
+    font-weight: 600;
+    color: var(--rust);
+  }
+
+  .order-card-total {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--stone);
+    text-align: right;
+    padding-top: 0.25rem;
+    white-space: nowrap;
+  }
+
+  /* ── Pizza totals ───────────────────────── */
+  .pizza-totals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .pizza-total-card {
+    background: var(--charcoal);
+    color: var(--cream);
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .pizza-total-qty {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    line-height: 1;
+  }
+
+  .pizza-total-name {
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--stone);
+  }
+
+  /* ── Ingredient list ────────────────────── */
+  .ingredient-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 420px;
+  }
+
+  .ingredient-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--warm);
+  }
+  .ingredient-row:last-child { border-bottom: none; }
+
+  .ingredient-name {
+    font-size: 0.95rem;
+    color: var(--charcoal);
+  }
+
+  .ingredient-qty {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--rust);
+    white-space: nowrap;
+  }
+</style>
+
+{% endblock %}

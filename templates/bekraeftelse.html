@@ -1,0 +1,73 @@
+{% extends "main.html" %}
+{% load danish_date %}
+
+{% block title %}Anmodning modtaget — Naboens Pizza{% endblock %}
+
+{% block content %}
+
+<section class="bestil-page text-center">
+
+  <div class="bekraeftelse-icon">✓</div>
+
+  <span class="label">Anmodning modtaget</span>
+  <h1 class="section-heading">Tak, {{ order.name|truncatewords:1 }}.</h1>
+
+  <div class="bekraeftelse-card mx-auto">
+    <div class="bk-row">
+      <span class="bk-label">Dato</span>
+      <span class="bk-value">{{ order.opening_day.date|date:"l d. F Y"|da }}</span>
+    </div>
+    <div class="bk-row highlight">
+      <span class="bk-label">Afhentningstid</span>
+      <span class="bk-value">kl. {{ order.pickup_time|time:"H:i" }}</span>
+    </div>
+    <div class="bk-row">
+      <span class="bk-label">Telefon</span>
+      <span class="bk-value">{{ order.phone }}</span>
+    </div>
+    <div class="bk-divider"></div>
+    {% for item in order.items.all %}
+    <div class="bk-row">
+      <span class="bk-label">{{ item.quantity }}×</span>
+      <span class="bk-value">{{ item.pizza.name }}</span>
+    </div>
+    {% endfor %}
+    <div class="bk-divider"></div>
+    <div class="bk-row">
+      <span class="bk-label">Betaling</span>
+      <span class="bk-value">På stedet (kontant eller MobilePay)</span>
+    </div>
+    <div class="bk-row">
+      <span class="bk-label">Afhentning</span>
+      <span class="bk-value">Ved adressen i Grindsted</span>
+    </div>
+  </div>
+
+  <p class="body-text mt-4 mx-auto" style="max-width:420px;">
+    Din anmodning er sendt — men den er ikke bekræftet endnu. Naboen kigger den igennem og sender dig en bekræftelse på <strong>{{ order.phone }}</strong> hurtigst muligt.
+  </p>
+
+  <a href="/" class="btn-back mt-3">Tilbage til forsiden</a>
+
+</section>
+
+<style>
+  .btn-back {
+    display: inline-block;
+    padding: 0.7rem 2rem;
+    border: 1px solid var(--charcoal);
+    color: var(--charcoal);
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-back:hover {
+    background: var(--charcoal);
+    color: var(--cream);
+  }
+</style>
+
+{% endblock %}
