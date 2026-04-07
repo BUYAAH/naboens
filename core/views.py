@@ -179,4 +179,5 @@ def opening_day(request, pk):
 
 def bekraeftelse(request, pk):
     order = get_object_or_404(Order, pk=pk)
-    return render(request, "bekraeftelse.html", {'order': order})
+    total_price = sum(item.quantity * item.pizza.price for item in order.items.all())
+    return render(request, "bekraeftelse.html", {'order': order, 'total_price': total_price})
