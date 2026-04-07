@@ -9,7 +9,7 @@
 
   <div class="bekraeftelse-icon">✓</div>
 
-  <span class="label">Anmodning modtaget</span>
+  <span class="label">Bestilling bekræftet</span>
   <h1 class="section-heading">Tak, {{ order.name|truncatewords:1 }}.</h1>
 
   <div class="bekraeftelse-card mx-auto">
@@ -39,12 +39,12 @@
     </div>
     <div class="bk-row">
       <span class="bk-label">Afhentning</span>
-      <span class="bk-value">Ved adressen i Grindsted</span>
+      <span class="bk-value">Tranevej 52, Grindsted</span>
     </div>
   </div>
 
   <p class="body-text mt-4 mx-auto" style="max-width:420px;">
-    Din anmodning er sendt — men den er ikke bekræftet endnu. Naboen kigger den igennem og sender dig en bekræftelse på <strong>{{ order.phone }}</strong> hurtigst muligt.
+    Din bestilling er modtaget og klar til afhentning på <strong>Tranevej 52</strong> kl. <strong>{{ order.pickup_time|time:"H:i" }}</strong>.
   </p>
 
   <a href="/" class="btn-back mt-3">Tilbage til forsiden</a>

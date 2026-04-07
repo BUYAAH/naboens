@@ -13,7 +13,8 @@
       "Bash(../venv/Scripts/pip show:*)",
       "Bash(../venv/Scripts/pip install:*)",
       "Bash(../venv/Scripts/python manage.py makemigrations core --name pizza_image)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(python -c ':*)"
     ]
   }
 }
