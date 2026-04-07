@@ -9,10 +9,15 @@
 
   <div class="bekraeftelse-icon">✓</div>
 
-  <span class="label">Bestilling bekræftet</span>
+  <span class="label">Bestilling bekræftet · #{{ order.id }}</span>
   <h1 class="section-heading">Tak, {{ order.name|truncatewords:1 }}.</h1>
 
   <div class="bekraeftelse-card mx-auto">
+    <div class="bk-row">
+      <span class="bk-label">Ordrenr.</span>
+      <span class="bk-value">#{{ order.id }}</span>
+    </div>
+    <div class="bk-divider"></div>
     <div class="bk-row">
       <span class="bk-label">Dato</span>
       <span class="bk-value">{{ order.opening_day.date|date:"l d. F Y"|da }}</span>
@@ -35,7 +40,7 @@
     <div class="bk-divider"></div>
     <div class="bk-row">
       <span class="bk-label">Betaling</span>
-      <span class="bk-value">På stedet (kontant eller MobilePay)</span>
+      <span class="bk-value">Kort eller kontant</span>
     </div>
     <div class="bk-row">
       <span class="bk-label">Afhentning</span>

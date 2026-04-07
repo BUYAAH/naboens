@@ -43,7 +43,7 @@
     <div class="col-md-6" data-aos="fade-right">
         <span class="label">Om projektet</span>
         <h2 class="section-heading">En passioneret nabo med en ovn.</h2>
-        <p class="body-text">Naboens Pizza er et fritidsprojekt drevet af ægte kærlighed til napolitansk pizza. Dejen hæver i lang tid, råvarerne købes dagen før og bruges samme dag — og der laves ikke mere, end ovnen kan klare ordentligt.</p>
+        <p class="body-text">Naboens Pizza er et fritidsprojekt drevet af ægte kærlighed til napolitansk pizza. Dejen hæver i lang tid, råvarerne købes dagen før — og der laves ikke mere, end ovnen kan klare ordentligt.</p>
         <p class="body-text">Det hele foregår hjemme fra køkkenet i Grindsted, i en elektrisk pizzaovn der når 509°C i kammeret. Det giver den afbagning, du normalt kun finder i Napoli. Alle regler fra Fødevarestyrelsen overholdes til punkt og prikke.</p>
     </div>
     <div class="col-md-6" data-aos="fade-left" data-aos-delay="150">
@@ -59,7 +59,6 @@
     <div class="text-center mb-5" data-aos="fade-up">
         <span class="label">Menukortet</span>
         <h2 class="section-heading">Fem pizzaer. Ikke flere.</h2>
-        <p class="body-text mx-auto" style="max-width:480px;">Alle pizzaer er baseret på San Marzano-tomater, kvalitetsmozzarella og hjemmelavet dej med langtidshævning.</p>
     </div>
 
     <div class="menu-grid">
@@ -88,7 +87,7 @@
 <section id="hours" class="section-block text-center">
     <span class="label" data-aos="fade-up">Find os</span>
     <h2 class="section-heading" data-aos="fade-up" data-aos-delay="50">Hvornår vi holder åbent</h2>
-    <p class="body-text mx-auto mb-4" style="max-width:460px;" data-aos="fade-up" data-aos-delay="100">Vi åbner ca. tre aftener om måneden — altid annonceret i <a href="https://www.facebook.com/share/17rDWojUkw/?mibextid=wwXIfr" target="_blank" rel="noopener">Køb/salg-gruppen for Grindsted</a>. Kom forbi.</p>
+    <p class="body-text mx-auto mb-4" style="max-width:460px;" data-aos="fade-up" data-aos-delay="100">Åbningstider annonceres her på siden samt i <a href="https://www.facebook.com/share/17rDWojUkw/?mibextid=wwXIfr" target="_blank" rel="noopener">Køb/salg-gruppen for Grindsted</a>.</p>
     <div class="hours-grid mx-auto" data-aos="fade-up" data-aos-delay="150">
         {% for day in opening_days %}
         <div class="hours-row">
@@ -114,7 +113,7 @@
         </div>
     </div>
     <p class="body-text mt-4" style="max-width:440px;margin-inline:auto;" data-aos="fade-up" data-aos-delay="200">
-        Afhentning ved adressen i Grindsted · Betaling på stedet · Følg med i gruppen for næste dato.
+        Afhentning sker på Tranevej 52 · Betaling på stedet · Følg med i gruppen for næste dato.
     </p>
     {% if upcoming %}
     <a href="{% url 'bestil2' %}" class="btn-primary-dark mt-4" data-aos="fade-up" data-aos-delay="250">Bestil til {{ upcoming.date|date:"d. F"|da }} →</a>

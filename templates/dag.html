@@ -10,6 +10,7 @@
   <ul class="nav-links">
     <li><a href="{% url 'dashboard' %}">← Alle dage</a></li>
     <li><a href="/admin/">Admin</a></li>
+    <li><button id="wakelock-btn" onclick="toggleWakeLock()" class="nav-wakelock-btn" title="Hold skærm tændt">☀️ Forbliv tændt (off)</button></li>
   </ul>
 </nav>
 
@@ -71,7 +72,7 @@
             {% endfor %}
           </ul>
         </div>
-        <div class="order-card-total">{{ order.total_pizzas }} stk</div>
+        <div class="order-card-total">{{ order.total_pizzas }} stk<br><span class="order-card-id">#{{ order.id }}</span></div>
       </div>
       {% endfor %}
     </div>
@@ -337,6 +338,11 @@
   }
   .order-card-phone:hover { color: var(--charcoal); }
 
+  .order-card-id {
+    font-size: 0.82rem;
+    color: var(--stone);
+  }
+
   .order-card-items {
     list-style: none;
     padding: 0;
@@ -422,6 +428,67 @@
     color: var(--rust);
     white-space: nowrap;
   }
+  .nav-wakelock-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--cream);
+    padding: 0;
+    font-family: inherit;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .nav-wakelock-btn.active { opacity: 1; }
 </style>
+
+<script>
+  let wakeLock = null;
+  const btn = document.getElementById('wakelock-btn');
+
+  function setActive(active) {
+    btn.textContent = active ? '☀️ Forbliv tændt (on)' : '☀️ Forbliv tændt (off)';
+    btn.classList.toggle('active', active);
+    localStorage.setItem('wakeLockEnabled', active ? '1' : '0');
+  }
+
+  async function acquireWakeLock() {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      setActive(true);
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+        setActive(false);
+      });
+    } catch (e) {
+      alert('Wake Lock ikke understøttet i denne browser.');
+    }
+  }
+
+  async function toggleWakeLock() {
+    if (wakeLock) {
+      await wakeLock.release();
+      wakeLock = null;
+      setActive(false);
+    } else {
+      await acquireWakeLock();
+    }
+  }
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && localStorage.getItem('wakeLockEnabled') === '1') {
+      await acquireWakeLock();
+    }
+  });
+
+  // Gendan tilstand ved sideindlæsning
+  if (localStorage.getItem('wakeLockEnabled') === '1') {
+    acquireWakeLock();
+  }
+
+  // Auto-refresh hvert minut
+  setTimeout(() => location.reload(), 60 * 1000);
+</script>
 
 {% endblock %}
