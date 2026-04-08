@@ -67,6 +67,7 @@ class OpeningDay(models.Model):
 class Order(models.Model):
     opening_day  = models.ForeignKey(OpeningDay, on_delete=models.CASCADE, related_name='orders')
     name         = models.CharField(max_length=100)
+    email        = models.EmailField(blank=True)
     phone        = models.CharField(max_length=20)
     pickup_time  = models.TimeField()
     total_pizzas = models.PositiveIntegerField()

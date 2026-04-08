@@ -9,6 +9,7 @@ class OrderForm(forms.Form):
     slot_time = forms.CharField(max_length=5,   label='Tidspunkt')
     name      = forms.CharField(max_length=100, label='Navn')
     phone     = forms.CharField(max_length=20,  label='Telefonnummer')
+    email     = forms.EmailField(required=False, label='E-mail', help_text='Valgfrit — til ordrebekræftelse')
 
     def __init__(self, *args, pizzas=None, **kwargs):
         super().__init__(*args, **kwargs)

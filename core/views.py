@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -81,6 +82,7 @@ def bestil2(request):
                 order = Order.objects.create(
                     opening_day=opening,
                     name=data['name'],
+                    email=data.get('email', ''),
                     phone=data['phone'],
                     pickup_time=slot_time,
                     total_pizzas=total,
@@ -89,6 +91,32 @@ def bestil2(request):
                     qty = data.get(f'pizza_{pizza.pk}') or 0
                     if qty > 0:
                         OrderItem.objects.create(order=order, pizza=pizza, quantity=qty)
+
+                if order.email:
+                    items = order.items.select_related('pizza').all()
+                    lines = '\n'.join(f'  {item.quantity}× {item.pizza.name} ({item.quantity * item.pizza.price} kr)' for item in items)
+                    total_price = sum(item.quantity * item.pizza.price for item in items)
+                    try:
+                        send_mail(
+                            subject=f'Bestilling #{order.id} modtaget — Naboens Pizza',
+                            message=(
+                                f'Hej {order.name},\n\n'
+                                f'Din bestilling er modtaget!\n\n'
+                                f'Ordrenr.: #{order.id}\n'
+                                f'Dato: {opening.date.strftime("%A d. %-d. %B %Y")}\n'
+                                f'Afhentning: kl. {order.pickup_time.strftime("%H:%M")} på Tranevej 50, Grindsted\n\n'
+                                f'Du har bestilt:\n{lines}\n\n'
+                                f'I alt: {total_price} kr\n'
+                                f'Betaling: Kort eller kontant ved afhentning\n\n'
+                                f'Vi ses!\n— Naboens Pizza'
+                            ),
+                            from_email=None,
+                            recipient_list=[order.email],
+                            fail_silently=True,
+                        )
+                    except Exception:
+                        pass
+
                 return redirect('bekraeftelse', pk=order.pk)
     else:
         form = OrderForm(pizzas=pizzas)

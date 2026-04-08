@@ -34,7 +34,7 @@
   <div class="bestil-header text-center">
     <span class="label">Næste åbning</span>
     <h1 class="section-heading">Bestil til {{ opening.date|date:"l d. F"|da }}</h1>
-    <p class="body-text">Kl. {{ opening.start_time|time:"H:i" }}–{{ opening.close_time|time:"H:i" }} &nbsp;·&nbsp; Afhentning på Tranevej 52 &nbsp;·&nbsp; Betaling på stedet</p>
+    <p class="body-text">Kl. {{ opening.start_time|time:"H:i" }}–{{ opening.close_time|time:"H:i" }} &nbsp;·&nbsp; Afhentning på Tranevej 50 &nbsp;·&nbsp; Betaling på stedet</p>
   </div>
 
   {% if form.non_field_errors %}
@@ -119,6 +119,11 @@
         <input type="tel" name="phone" id="phone" class="input-custom {% if form.phone.errors %}input-error{% endif %}"
                value="{{ form.phone.value|default:'' }}" placeholder="Så vi kan kontakte dig ved behov">
         {% if form.phone.errors %}<p class="field-error">{{ form.phone.errors.0 }}</p>{% endif %}
+
+        <label for="email" class="form-label-custom">E-mail <span style="font-weight:400;opacity:0.6;">(valgfrit — til ordrebekræftelse)</span></label>
+        <input type="email" name="email" id="email" class="input-custom {% if form.email.errors %}input-error{% endif %}"
+               value="{{ form.email.value|default:'' }}" placeholder="din@email.dk">
+        {% if form.email.errors %}<p class="field-error">{{ form.email.errors.0 }}</p>{% endif %}
       </div>
       <button type="submit" class="btn-submit" id="submit-btn" disabled>Afgiv bestilling</button>
     </div>
