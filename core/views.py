@@ -8,6 +8,14 @@ from django.utils import timezone
 
 from .models import OpeningDay, Order, OrderItem, Pizza
 from .forms import OrderForm
+from .templatetags.danish_date import _TRANSLATIONS
+
+
+def _danish_date(date):
+    s = date.strftime('%A d. %-d. %B %Y')
+    for en, da in _TRANSLATIONS.items():
+        s = s.replace(en, da)
+    return s
 
 
 def _next_opening():
@@ -39,12 +47,12 @@ def index(request):
 
 
 
-def bestil2(request):
+def bestil(request):
     opening = _next_opening()
     pizzas  = list(Pizza.objects.filter(is_active=True))
 
     if not opening:
-        return render(request, "bestil2.html", {'opening': None})
+        return render(request, "bestil.html", {'opening': None})
 
     start_dt      = datetime.combine(opening.date, opening.start_time)
     close_dt      = datetime.combine(opening.date, opening.close_time)
@@ -92,10 +100,39 @@ def bestil2(request):
                     if qty > 0:
                         OrderItem.objects.create(order=order, pizza=pizza, quantity=qty)
 
+                items = list(order.items.select_related('pizza').all())
+                lines = '\n'.join(f'  {item.quantity}× {item.pizza.name} ({item.quantity * item.pizza.price} kr)' for item in items)
+                total_price = sum(item.quantity * item.pizza.price for item in items)
+
+                # Dagsoverblik til ejeren
+                all_orders = opening.orders.prefetch_related('items__pizza').order_by('pickup_time')
+                day_lines = []
+                for o in all_orders:
+                    o_items = ', '.join(f'{i.quantity}× {i.pizza.name}' for i in o.items.all())
+                    day_lines.append(f'  kl. {o.pickup_time.strftime("%H:%M")}  {o.name} ({o.phone})  —  {o_items}')
+                day_summary = '\n'.join(day_lines) if day_lines else '  Ingen andre ordrer endnu.'
+
+                try:
+                    send_mail(
+                        subject=f'Ny bestilling #{order.id} — {order.name} kl. {order.pickup_time.strftime("%H:%M")}',
+                        message=(
+                            f'Ny bestilling modtaget!\n\n'
+                            f'#{order.id}  {order.name}  ·  {order.phone}\n'
+                            f'Afhentning: kl. {order.pickup_time.strftime("%H:%M")}\n\n'
+                            f'{lines}\n'
+                            f'I alt: {total_price} kr\n\n'
+                            f'{"─" * 40}\n'
+                            f'Alle ordrer på {opening.date.strftime("%-d/%-m")}:\n'
+                            f'{day_summary}\n'
+                        ),
+                        from_email=None,
+                        recipient_list=['naboenspizza@gmail.com'],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+
                 if order.email:
-                    items = order.items.select_related('pizza').all()
-                    lines = '\n'.join(f'  {item.quantity}× {item.pizza.name} ({item.quantity * item.pizza.price} kr)' for item in items)
-                    total_price = sum(item.quantity * item.pizza.price for item in items)
                     try:
                         send_mail(
                             subject=f'Bestilling #{order.id} modtaget — Naboens Pizza',
@@ -103,11 +140,11 @@ def bestil2(request):
                                 f'Hej {order.name},\n\n'
                                 f'Din bestilling er modtaget!\n\n'
                                 f'Ordrenr.: #{order.id}\n'
-                                f'Dato: {opening.date.strftime("%A d. %-d. %B %Y")}\n'
+                                f'Dato: {_danish_date(opening.date)}\n'
                                 f'Afhentning: kl. {order.pickup_time.strftime("%H:%M")} på Tranevej 50, Grindsted\n\n'
                                 f'Du har bestilt:\n{lines}\n\n'
                                 f'I alt: {total_price} kr\n'
-                                f'Betaling: Kort eller kontant ved afhentning\n\n'
+                                f'Betaling: Kort eller MobilePay ved afhentning\n\n'
                                 f'Vi ses!\n— Naboens Pizza'
                             ),
                             from_email=None,
@@ -126,7 +163,7 @@ def bestil2(request):
         for p in pizzas
     ]
 
-    return render(request, "bestil2.html", {
+    return render(request, "bestil.html", {
         'opening':            opening,
         'form':               form,
         'timeline_json':      timeline_json,
@@ -189,7 +226,7 @@ def opening_day(request, pk):
     total_profit  = sum(r['profit']  for r in pizza_financials if r['profit'] is not None)
     cost_known    = any(r['cost'] is not None for r in pizza_financials)
 
-    return render(request, "dag.html", {
+    return render(request, "opening_day.html", {
         'opening':           opening,
         'orders':            orders,
         'pizza_totals':      pizza_totals,

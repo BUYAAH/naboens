@@ -8,7 +8,7 @@
 {% if upcoming %}
 <div class="opening-banner">
     Vi åbner <strong>{{ upcoming.date|date:"l d. F" }}</strong> kl. {{ upcoming.start_time|time:"H:i" }}–{{ upcoming.close_time|time:"H:i" }} &nbsp;·&nbsp;
-    <a href="{% url 'bestil2' %}">Bestil din plads nu &rarr;</a>
+    <a href="{% url 'bestil' %}">Bestil din plads nu &rarr;</a>
 </div>
 {% endif %}
 
@@ -21,7 +21,7 @@
         <li><a href="#menu">Menu</a></li>
         <li><a href="#hours">Åbningstider</a></li>
         <li><a href="#contact">Kontakt</a></li>
-        <li><a href="{% url 'bestil2' %}" style="color:var(--cream);">Bestil</a></li>
+        <li><a href="{% url 'bestil' %}" style="color:var(--cream);">Bestil</a></li>
     </ul>
 </nav>
 
@@ -116,7 +116,7 @@
         Afhentning sker på Tranevej 50 · Betaling på stedet · Følg med i gruppen for næste dato.
     </p>
     {% if upcoming %}
-    <a href="{% url 'bestil2' %}" class="btn-primary-dark mt-4" data-aos="fade-up" data-aos-delay="250">Bestil til {{ upcoming.date|date:"d. F"|da }} →</a>
+    <a href="{% url 'bestil' %}" class="btn-primary-dark mt-4" data-aos="fade-up" data-aos-delay="250">Bestil til {{ upcoming.date|date:"d. F"|da }} →</a>
     {% endif %}
 </section>
 
