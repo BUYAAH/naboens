@@ -29,67 +29,53 @@
   </div>
 
   <!-- ── Stat cards ──────────────────────────────────── -->
-  <div class="stat-grid">
-    <div class="stat-card">
-      <span class="stat-value">{{ orders|length }}</span>
-      <span class="stat-label">Bestillinger</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-value">{{ total_tak }}</span>
-      <span class="stat-label">Pizzaer i alt</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-value">{{ capacity_pct }}%</span>
-      <span class="stat-label">Kapacitet brugt</span>
-      <div class="stat-bar-track">
-        <div class="stat-bar-fill {% if capacity_pct >= 80 %}fill-high{% elif capacity_pct >= 40 %}fill-mid{% endif %}"
-             style="width: {{ capacity_pct }}%"></div>
+  <div class="row g-3 mb-5">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <span class="stat-value">{{ total_orders }}</span>
+        <span class="stat-label">Bestillinger</span>
       </div>
     </div>
-    <div class="stat-card">
-      <span class="stat-value">{{ total_cap }}</span>
-      <span class="stat-label">Kapacitet total</span>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <span class="stat-value">{{ total_tak }}</span>
+        <span class="stat-label">Pizzaer i alt</span>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <span class="stat-value">{{ capacity_pct }}%</span>
+        <span class="stat-label">Kapacitet brugt</span>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill {% if capacity_pct >= 80 %}fill-high{% elif capacity_pct >= 40 %}fill-mid{% endif %}"
+               style="width: {{ capacity_pct }}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <span class="stat-value">{{ pending_count }} / {{ paid_count }}</span>
+        <span class="stat-label">Afventer / Betalt</span>
+      </div>
     </div>
   </div>
 
-  <!-- ── Orders ──────────────────────────────────────── -->
-  <div class="dag-section">
-    <h2 class="dag-section-title">Bestillinger</h2>
-
-    {% if orders %}
-    <div class="order-cards">
-      {% for order in orders %}
-      <div class="order-card">
-        <div class="order-card-time">{{ order.pickup_time|time:"H:i" }}</div>
-        <div class="order-card-body">
-          <div class="order-card-customer">
-            <span class="order-card-name">{{ order.name }}</span>
-            <a href="tel:{{ order.phone }}" class="order-card-phone">{{ order.phone }}</a>
-          </div>
-          <ul class="order-card-items">
-            {% for item in order.items.all %}
-            <li><span class="item-qty">{{ item.quantity }}×</span> {{ item.pizza.name }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div class="order-card-total">{{ order.total_pizzas }} stk<br><span class="order-card-id">#{{ order.id }}</span></div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="body-text">Ingen bestillinger endnu.</p>
-    {% endif %}
+  <!-- ── Orders ─────────────────────────────────────── -->
+  <div id="orders-section">
+    {% include '_order_lists.html' %}
   </div>
 
   <!-- ── Pizza totals ─────────────────────────────────── -->
   {% if pizza_totals %}
   <div class="dag-section">
     <h2 class="dag-section-title">Pizzaoversigt</h2>
-    <div class="pizza-totals-grid">
+    <div class="row g-2">
       {% for pizza, qty in pizza_totals.items %}
-      <div class="pizza-total-card">
-        <span class="pizza-total-qty">{{ qty }}</span>
-        <span class="pizza-total-name">{{ pizza.name }}</span>
+      <div class="col-6 col-md-3">
+        <div class="pizza-total-card">
+          <span class="pizza-total-qty">{{ qty }}</span>
+          <span class="pizza-total-name">{{ pizza.name }}</span>
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -166,9 +152,31 @@
   </div>
   {% endif %}
 
+  {% if status_logs %}
+  <div class="dag-section">
+    <details class="day-log">
+      <summary class="day-log-summary">
+        <span class="dag-section-title" style="margin:0;">Aktivitetslog</span>
+        <span class="day-log-count">{{ status_logs|length }} hændelser</span>
+      </summary>
+      <div class="day-log-table">
+        {% for log in status_logs %}
+        <div class="day-log-row">
+          <span class="day-log-time">{{ log.changed_at|time:"H:i" }}</span>
+          <span class="day-log-name">{{ log.order.name }}</span>
+          <span class="day-log-change">{{ log.old_status }} → {{ log.new_status }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </details>
+  </div>
+  {% endif %}
+
 </section>
 
 <style>
+  .bestil-page { max-width: 900px; }
+
   /* ── Layout ─────────────────────────────── */
   .dag-header {
     display: flex;
@@ -208,19 +216,15 @@
   }
 
   /* ── Stat cards ─────────────────────────── */
-  .stat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1rem;
-    margin-bottom: 3rem;
-  }
-
   .stat-card {
     background: var(--warm);
     padding: 1.25rem 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    height: 100%;
+    align-items: center;
+    text-align: center;
   }
 
   .stat-value {
@@ -298,32 +302,45 @@
   .order-cards {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 1.25rem;
   }
 
   .order-card {
-    display: grid;
-    grid-template-columns: 4.5rem 1fr 3.5rem;
-    align-items: start;
-    gap: 1rem;
     background: var(--warm);
-    padding: 1rem 1.25rem;
+    overflow: hidden;
+  }
+
+  .order-card-time-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+    border-right: 1px solid rgba(0,0,0,0.07);
+    gap: 1.5rem;
   }
 
   .order-card-time {
     font-family: 'Playfair Display', serif;
     font-size: 1.3rem;
     color: var(--charcoal);
-    padding-top: 0.1rem;
+    line-height: 1;
   }
 
-  .order-card-body { display: flex; flex-direction: column; gap: 0.5rem; }
+  .order-card-id {
+    font-size: 0.75rem;
+    color: var(--stone);
+    line-height: 1;
+  }
 
-  .order-card-customer {
+  .order-card-info-col {
     display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.2rem;
+    padding: 1.25rem 1rem;
+    border-right: 1px solid rgba(0,0,0,0.07);
   }
 
   .order-card-name {
@@ -332,24 +349,20 @@
   }
 
   .order-card-phone {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--stone);
     text-decoration: none;
+    line-height: 1;
   }
   .order-card-phone:hover { color: var(--charcoal); }
-
-  .order-card-id {
-    font-size: 0.82rem;
-    color: var(--stone);
-  }
 
   .order-card-items {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0.25rem 0 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem 1rem;
+    flex-direction: column;
+    gap: 0.15rem;
   }
 
   .order-card-items li {
@@ -362,42 +375,76 @@
     color: var(--rust);
   }
 
-  .order-card-total {
-    font-size: 0.8rem;
-    font-weight: 600;
+  /* ── Log toggle ─────────────────────────── */
+  .order-log { position: relative; }
+
+  .order-log-btn {
+    list-style: none;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    border: 1px solid var(--stone);
     color: var(--stone);
-    text-align: right;
-    padding-top: 0.25rem;
+    cursor: pointer;
     white-space: nowrap;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
+  .order-log-btn::-webkit-details-marker { display: none; }
+  .order-log[open] .order-log-btn { color: var(--charcoal); border-color: var(--charcoal); }
 
-  /* ── Pizza totals ───────────────────────── */
-  .pizza-totals-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .pizza-total-card {
+  .order-log-entries {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    right: 0;
     background: var(--charcoal);
     color: var(--cream);
+    padding: 0.75rem 1rem;
+    min-width: 200px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .order-log-row {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .order-log-time { color: var(--stone); flex-shrink: 0; }
+  .order-log-change { }
+
+  /* ── Pizza totals ───────────────────────── */
+  .pizza-total-card {
+    background: var(--warm);
     padding: 1.1rem 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    height: 100%;
   }
 
   .pizza-total-qty {
     font-family: 'Playfair Display', serif;
-    font-size: 2.2rem;
+    font-size: 2.5rem;
     line-height: 1;
+    color: var(--charcoal);
+    text-align: center;
   }
 
   .pizza-total-name {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 500;
     letter-spacing: 0.05em;
     color: var(--stone);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-align: center;
   }
 
   /* ── Ingredient list ────────────────────── */
@@ -405,7 +452,6 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    max-width: 420px;
   }
 
   .ingredient-row {
@@ -428,6 +474,82 @@
     color: var(--rust);
     white-space: nowrap;
   }
+  /* ── Status button group ───────────────── */
+  .status-btn-group {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+  }
+
+  .status-btn {
+    flex: 1;
+    padding: 0.5rem 0.25rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    border: none;
+    border-left: 1px solid rgba(0,0,0,0.08);
+    background: transparent;
+    color: var(--stone);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    min-height: 80px;
+  }
+
+  .status-btn:hover:not(.active) { background: rgba(0,0,0,0.04); color: var(--charcoal); }
+
+  .status-btn.active[data-status="pending"] { background: var(--charcoal); color: var(--cream); border-color: var(--charcoal); }
+  .status-btn.active[data-status="igang"]   { background: var(--rust);     color: #fff;         border-color: var(--rust); }
+  .status-btn.active[data-status="ready"]   { background: #4a7c4a;         color: #fff;         border-color: #4a7c4a; }
+  .status-btn.active[data-status="paid"]    { background: var(--stone);    color: var(--cream); border-color: var(--stone); }
+
+  /* Card-level status tinting */
+  .order-card.status-pending { border-left: 4px solid transparent; }
+  .order-card.status-igang   { border-left: 4px solid var(--rust); }
+  .order-card.status-ready   { border-left: 4px solid #4a7c4a; }
+  .order-card.status-paid  { opacity: 0.55; }
+
+  /* ── Day activity log ──────────────────── */
+  .day-log-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+    gap: 1rem;
+  }
+  .day-log-summary::-webkit-details-marker { display: none; }
+
+  .day-log-count {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+
+  .day-log-table {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .day-log-row {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr 1fr;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--warm);
+    font-size: 0.875rem;
+  }
+
+  .day-log-time { color: var(--stone); }
+  .day-log-name { font-weight: 500; }
+  .day-log-change { color: var(--stone); }
+
   .nav-wakelock-btn {
     background: none;
     border: none;
@@ -489,6 +611,11 @@
 
   // Auto-refresh hvert minut
   setTimeout(() => location.reload(), 60 * 1000);
+
+  // Inject CSRF token into all HTMX requests
+  document.body.addEventListener('htmx:configRequest', e => {
+    e.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+  });
 </script>
 
 {% endblock %}

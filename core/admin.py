@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.contrib import admin
 from django.utils.html import format_html, format_html_join
 
-from .models import Ingredient, OpeningDay, Order, OrderItem, Pizza, PizzaIngredient
+from .models import Ingredient, OpeningDay, Order, OrderItem, OrderStatusLog, Pizza, PizzaIngredient
 
 
 # ── Ingredient ────────────────────────────────────────────────────────────────
@@ -140,3 +140,16 @@ class OrderAdmin(admin.ModelAdmin):
         parts = [f"{item.quantity}× {item.pizza.name}" for item in obj.items.all()]
         return ', '.join(parts) if parts else '—'
     pizza_summary.short_description = 'Pizzaer'
+
+
+# ── OrderStatusLog ────────────────────────────────────────────────────────────
+
+@admin.register(OrderStatusLog)
+class OrderStatusLogAdmin(admin.ModelAdmin):
+    list_display    = ['changed_at', 'order', 'old_status', 'new_status']
+    list_filter     = ['new_status', 'old_status', 'order__opening_day']
+    readonly_fields = ['order', 'old_status', 'new_status', 'changed_at']
+    ordering        = ['-changed_at']
+
+    def has_add_permission(self, request):
+        return False

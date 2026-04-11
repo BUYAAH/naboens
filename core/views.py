@@ -3,10 +3,13 @@ from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from .models import OpeningDay, Order, OrderItem, Pizza
+from .models import OpeningDay, Order, OrderItem, OrderStatusLog, Pizza
 from .forms import OrderForm
 from .templatetags.danish_date import _TRANSLATIONS
 
@@ -172,6 +175,77 @@ def bestil(request):
     })
 
 
+def bestil_test(request):
+    opening = _next_opening()
+    pizzas  = list(Pizza.objects.filter(is_active=True))
+
+    if not opening:
+        return render(request, "bestil_test.html", {'opening': None})
+
+    start_dt      = datetime.combine(opening.date, opening.start_time)
+    close_dt      = datetime.combine(opening.date, opening.close_time)
+    total_minutes = int((close_dt - start_dt).total_seconds() / 60)
+
+    taken_offsets = set()
+    for order in opening.orders.all():
+        order_start = datetime.combine(opening.date, order.pickup_time)
+        offset = int((order_start - start_dt).total_seconds() / 60)
+        for i in range(order.total_pizzas):
+            taken_offsets.add(offset + i * 5)
+
+    timeline_json = json.dumps({
+        'total_minutes': total_minutes,
+        'taken_offsets': sorted(taken_offsets),
+        'start_hour':    opening.start_time.hour,
+        'start_minute':  opening.start_time.minute,
+    })
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST, pizzas=pizzas)
+        if form.is_valid():
+            data          = form.cleaned_data
+            total         = data['total_pizzas']
+            slot_time_str = data['slot_time']
+            slot_time     = datetime.strptime(slot_time_str, '%H:%M').time()
+
+            slot_start = datetime.combine(opening.date, slot_time)
+            offset     = int((slot_start - start_dt).total_seconds() / 60)
+            needed     = {offset + i * 5 for i in range(total)}
+
+            if needed & taken_offsets:
+                form.add_error('slot_time', 'Desværre er det valgte tidspunkt ikke længere ledigt — prøv et andet.')
+            else:
+                order = Order.objects.create(
+                    opening_day=opening,
+                    name=data['name'],
+                    email=data.get('email', ''),
+                    phone=data['phone'],
+                    pickup_time=slot_time,
+                    total_pizzas=total,
+                )
+                for pizza in pizzas:
+                    qty = data.get(f'pizza_{pizza.pk}') or 0
+                    if qty > 0:
+                        OrderItem.objects.create(order=order, pizza=pizza, quantity=qty)
+
+                return redirect('bekraeftelse', pk=order.pk)
+    else:
+        form = OrderForm(pizzas=pizzas)
+
+    pizzas_with_fields = [
+        {'pizza': p, 'field': form[f'pizza_{p.pk}']}
+        for p in pizzas
+    ]
+
+    return render(request, "bestil_test.html", {
+        'opening':            opening,
+        'form':               form,
+        'timeline_json':      timeline_json,
+        'pizzas_json':        _pizzas_json(pizzas),
+        'pizzas_with_fields': pizzas_with_fields,
+    })
+
+
 @login_required
 def dashboard(request):
     today = timezone.localdate()
@@ -184,7 +258,7 @@ def dashboard(request):
 def opening_day(request, pk):
     opening = get_object_or_404(OpeningDay, pk=pk)
     orders  = opening.orders.prefetch_related(
-        'items__pizza__pizza_ingredients__ingredient'
+        'items__pizza__pizza_ingredients__ingredient',
     ).order_by('pickup_time')
 
     # Per-pizza totals
@@ -226,9 +300,22 @@ def opening_day(request, pk):
     total_profit  = sum(r['profit']  for r in pizza_financials if r['profit'] is not None)
     cost_known    = any(r['cost'] is not None for r in pizza_financials)
 
+    open_orders    = [o for o in orders if o.status != Order.STATUS_PAID]
+    paid_orders    = [o for o in orders if o.status == Order.STATUS_PAID]
+    pending_count  = sum(1 for o in orders if o.status == Order.STATUS_PENDING)
+    paid_count     = len(paid_orders)
+
+    status_logs = OrderStatusLog.objects.filter(
+        order__opening_day=opening
+    ).select_related('order').order_by('-changed_at')
+
     return render(request, "opening_day.html", {
         'opening':           opening,
-        'orders':            orders,
+        'open_orders':       open_orders,
+        'paid_orders':       paid_orders,
+        'total_orders':      len(open_orders) + len(paid_orders),
+        'pending_count':     pending_count,
+        'paid_count':        paid_count,
         'pizza_totals':      pizza_totals,
         'pizza_financials':  pizza_financials,
         'ingredient_totals': ingredient_totals,
@@ -239,7 +326,39 @@ def opening_day(request, pk):
         'total_cost':        total_cost,
         'total_profit':      total_profit,
         'cost_known':        cost_known,
+        'status_logs':       status_logs,
     })
+
+
+@login_required
+@require_POST
+def set_order_status(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    new_status = request.POST.get('status')
+    if new_status not in (Order.STATUS_PENDING, Order.STATUS_IGANG, Order.STATUS_READY, Order.STATUS_PAID):
+        return HttpResponse(status=400)
+
+    old_status = order.status
+    order.status = new_status
+    order.save(update_fields=['status'])
+    OrderStatusLog.objects.create(order=order, old_status=old_status, new_status=new_status)
+
+    crosses_lists = (old_status == Order.STATUS_PAID) != (new_status == Order.STATUS_PAID)
+
+    if crosses_lists:
+        orders = order.opening_day.orders.prefetch_related('items__pizza').order_by('pickup_time')
+        open_orders = [o for o in orders if o.status != Order.STATUS_PAID]
+        paid_orders = [o for o in orders if o.status == Order.STATUS_PAID]
+        html = render_to_string('_order_lists.html', {
+            'open_orders': open_orders,
+            'paid_orders': paid_orders,
+        }, request=request)
+        response = HttpResponse(html)
+        response['HX-Retarget'] = '#orders-section'
+        response['HX-Reswap'] = 'innerHTML'
+        return response
+
+    return HttpResponse(render_to_string('_order_card.html', {'order': order}, request=request))
 
 
 def bekraeftelse(request, pk):

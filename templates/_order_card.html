@@ -1,0 +1,49 @@
+<div class="order-card status-{{ order.status }}" data-order-id="{{ order.id }}">
+  <div class="row g-0 h-100">
+
+    <div class="col-2 order-card-time-col">
+      <span class="order-card-time">{{ order.pickup_time|time:"H:i" }}</span>
+      <span class="order-card-id">#{{ order.id }}</span>
+      <a href="tel:{{ order.phone }}" class="order-card-phone">{{ order.phone }}</a>
+    </div>
+
+    <div class="col-4 order-card-info-col">
+      <span class="order-card-name">{{ order.name }}</span>
+      <ul class="order-card-items">
+        {% for item in order.items.all %}
+        <li><span class="item-qty">{{ item.quantity }}×</span> {{ item.pizza.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-6 p-0">
+      <div class="status-btn-group">
+        <button class="status-btn {% if order.status == 'pending' %}active{% endif %}"
+                data-status="pending"
+                hx-post="{% url 'set_order_status' order.id %}"
+                hx-vals='{"status": "pending"}'
+                hx-target="closest .order-card"
+                hx-swap="outerHTML">Afventer</button>
+        <button class="status-btn {% if order.status == 'igang' %}active{% endif %}"
+                data-status="igang"
+                hx-post="{% url 'set_order_status' order.id %}"
+                hx-vals='{"status": "igang"}'
+                hx-target="closest .order-card"
+                hx-swap="outerHTML">Igang</button>
+        <button class="status-btn {% if order.status == 'ready' %}active{% endif %}"
+                data-status="ready"
+                hx-post="{% url 'set_order_status' order.id %}"
+                hx-vals='{"status": "ready"}'
+                hx-target="closest .order-card"
+                hx-swap="outerHTML">Klar</button>
+        <button class="status-btn {% if order.status == 'paid' %}active{% endif %}"
+                data-status="paid"
+                hx-post="{% url 'set_order_status' order.id %}"
+                hx-vals='{"status": "paid"}'
+                hx-target="closest .order-card"
+                hx-swap="outerHTML">Betalt</button>
+      </div>
+    </div>
+
+  </div>
+</div>

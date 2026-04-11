@@ -1,0 +1,15 @@
+<div class="dag-section">
+  <h2 class="dag-section-title">Aktive bestillinger</h2>
+  <div class="order-cards" id="orders-open">
+    {% for order in open_orders %}{% include '_order_card.html' %}{% endfor %}
+  </div>
+  {% if not open_orders %}<p class="body-text">Ingen bestillinger endnu.</p>{% endif %}
+</div>
+
+<div class="dag-section">
+  <h2 class="dag-section-title">Afsluttede</h2>
+  <div class="order-cards" id="orders-paid">
+    {% for order in paid_orders %}{% include '_order_card.html' %}{% endfor %}
+  </div>
+  {% if not paid_orders %}<p class="body-text">Ingen afsluttede endnu.</p>{% endif %}
+</div>

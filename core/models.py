@@ -65,12 +65,24 @@ class OpeningDay(models.Model):
 
 
 class Order(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_IGANG   = 'igang'
+    STATUS_READY   = 'ready'
+    STATUS_PAID    = 'paid'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Afventer'),
+        (STATUS_IGANG,   'Igang'),
+        (STATUS_READY,   'Klar'),
+        (STATUS_PAID,    'Betalt'),
+    ]
+
     opening_day  = models.ForeignKey(OpeningDay, on_delete=models.CASCADE, related_name='orders')
     name         = models.CharField(max_length=100)
     email        = models.EmailField(blank=True)
     phone        = models.CharField(max_length=20)
     pickup_time  = models.TimeField()
     total_pizzas = models.PositiveIntegerField()
+    status       = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
     created_at   = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -79,6 +91,19 @@ class Order(models.Model):
     def __str__(self):
         plural = 'er' if self.total_pizzas != 1 else ''
         return f"{self.name} — kl. {self.pickup_time.strftime('%H:%M')} ({self.total_pizzas} pizza{plural})"
+
+
+class OrderStatusLog(models.Model):
+    order      = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_logs')
+    old_status = models.CharField(max_length=10)
+    new_status = models.CharField(max_length=10)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['changed_at']
+
+    def __str__(self):
+        return f"#{self.order_id} {self.old_status} → {self.new_status} ({self.changed_at:%Y-%m-%d %H:%M})"
 
 
 class OrderItem(models.Model):
