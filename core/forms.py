@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django import forms
 
-from .models import Pizza
+from .models import Extra, Pizza
 
 
 class OrderForm(forms.Form):
@@ -11,16 +11,30 @@ class OrderForm(forms.Form):
     phone     = forms.CharField(max_length=20,  label='Telefonnummer')
     email     = forms.EmailField(required=False, label='E-mail', help_text='Valgfrit — til ordrebekræftelse')
 
-    def __init__(self, *args, pizzas=None, **kwargs):
+    def __init__(self, *args, pizzas=None, extras=None, **kwargs):
         super().__init__(*args, **kwargs)
         if pizzas is None:
             pizzas = list(Pizza.objects.filter(is_active=True))
+        if extras is None:
+            extras = list(Extra.objects.filter(is_active=True))
         self.pizzas = pizzas
+        self.extras = extras
         for pizza in self.pizzas:
             self.fields[f'pizza_{pizza.pk}'] = forms.IntegerField(
                 min_value=0, max_value=4, initial=0, required=False,
                 label=pizza.name,
             )
+        for extra in self.extras:
+            self.fields[f'extra_{extra.pk}'] = forms.IntegerField(
+                min_value=0, max_value=20, initial=0, required=False,
+                label=extra.name,
+            )
+
+    def clean_phone(self):
+        value = self.cleaned_data.get('phone', '').strip()
+        if not value.isdigit():
+            raise forms.ValidationError("Indtast kun cifre.")
+        return value
 
     def clean_slot_time(self):
         value = self.cleaned_data.get('slot_time', '').strip()

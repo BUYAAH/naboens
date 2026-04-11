@@ -32,24 +32,20 @@
   <div class="row g-3 mb-5">
     <div class="col-6 col-md-3">
       <div class="stat-card">
-        <span class="stat-value">{{ total_orders }}</span>
-        <span class="stat-label">Bestillinger</span>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="stat-card">
-        <span class="stat-value">{{ total_tak }}</span>
+        <span class="stat-value">{{ total_pizzas_count }}</span>
         <span class="stat-label">Pizzaer i alt</span>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-card">
-        <span class="stat-value">{{ capacity_pct }}%</span>
-        <span class="stat-label">Kapacitet brugt</span>
-        <div class="stat-bar-track">
-          <div class="stat-bar-fill {% if capacity_pct >= 80 %}fill-high{% elif capacity_pct >= 40 %}fill-mid{% endif %}"
-               style="width: {{ capacity_pct }}%"></div>
-        </div>
+        <span class="stat-value">{{ total_revenue }} kr</span>
+        <span class="stat-label">Omsætning</span>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <span class="stat-value">{{ total_tak }} / {{ total_cap }}</span>
+        <span class="stat-label">Slots brugt</span>
       </div>
     </div>
     <div class="col-6 col-md-3">
@@ -103,14 +99,14 @@
   {% endif %}
 
   <!-- ── Økonomi ──────────────────────────────────────── -->
-  {% if pizza_financials %}
+  {% if pizza_financials or extra_financials %}
   <div class="dag-section">
     <h2 class="dag-section-title">Økonomi</h2>
 
     <table class="fin-table">
       <thead>
         <tr>
-          <th>Pizza</th>
+          <th>Vare</th>
           <th class="fin-num">Antal</th>
           <th class="fin-num">Pris/stk</th>
           <th class="fin-num">Omsætning</th>
@@ -124,6 +120,20 @@
           <td>{{ r.pizza.name }}</td>
           <td class="fin-num">{{ r.qty }}</td>
           <td class="fin-num">{{ r.pizza.price }} kr</td>
+          <td class="fin-num">{{ r.revenue }} kr</td>
+          {% if cost_known %}
+          <td class="fin-num">{% if r.cost is not None %}{{ r.cost }} kr{% else %}—{% endif %}</td>
+          <td class="fin-num {% if r.profit is not None and r.profit >= 0 %}fin-pos{% elif r.profit is not None %}fin-neg{% endif %}">
+            {% if r.profit is not None %}{{ r.profit }} kr{% else %}—{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+        {% for r in extra_financials %}
+        <tr>
+          <td>{{ r.extra.name }}</td>
+          <td class="fin-num">{{ r.qty }}</td>
+          <td class="fin-num">{{ r.extra.price }} kr</td>
           <td class="fin-num">{{ r.revenue }} kr</td>
           {% if cost_known %}
           <td class="fin-num">{% if r.cost is not None %}{{ r.cost }} kr{% else %}—{% endif %}</td>
@@ -147,7 +157,7 @@
     </table>
 
     {% if not cost_known %}
-    <p class="body-text mt-3" style="color:var(--stone);font-size:0.85rem;">Tilføj råvarepriser på pizzaerne i admin for at se fortjeneste.</p>
+    <p class="body-text mt-3" style="color:var(--stone);font-size:0.85rem;">Tilføj råvarepriser på pizzaer og tilbehør i admin for at se fortjeneste.</p>
     {% endif %}
   </div>
   {% endif %}
@@ -293,7 +303,7 @@
     font-weight: 600;
   }
 
-  .fin-num { text-align: right; }
+  .fin-num, th.fin-num { text-align: right; }
   .fin-num.fin-total { font-weight: 700; }
   .fin-pos { color: #4a7c4a; }
   .fin-neg { color: var(--rust); }
@@ -373,6 +383,9 @@
   .item-qty {
     font-weight: 600;
     color: var(--rust);
+  }
+  .item-qty-extra {
+    color: #5b9bd5;
   }
 
   /* ── Log toggle ─────────────────────────── */

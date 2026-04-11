@@ -13,6 +13,9 @@
         {% for item in order.items.all %}
         <li><span class="item-qty">{{ item.quantity }}×</span> {{ item.pizza.name }}</li>
         {% endfor %}
+        {% for item in order.extra_items.all %}
+        <li><span class="item-qty item-qty-extra">{{ item.quantity }}×</span> {{ item.extra.name }}</li>
+        {% endfor %}
       </ul>
     </div>
 

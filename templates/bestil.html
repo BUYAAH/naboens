@@ -1,7 +1,7 @@
 {% extends "main.html" %}
 {% load danish_date %}
 
-{% block title %}Bestil (v2) — Naboens Pizza{% endblock %}
+{% block title %}Bestil (test) — Naboens Pizza{% endblock %}
 
 {% block content %}
 
@@ -51,7 +51,7 @@
     <div class="step-block">
       <h2 class="form-section-title">
         <span class="step-num">1</span> Hvad vil du have?
-        <span class="form-hint">(max 4 i alt)</span>
+        <span class="form-hint">(max 4 pizzaer i alt)</span>
       </h2>
 
       <div class="pizza-list">
@@ -78,23 +78,48 @@
         </div>
         {% endfor %}
       </div>
+
+      {% if extras_with_fields %}
+      <h3 class="extras-subheading">Tilbehør</h3>
+      <div class="pizza-list">
+        {% for ef in extras_with_fields %}
+        <div class="pizza-row">
+          {% if ef.extra.image %}
+          <img src="{{ ef.extra.image.url }}" alt="{{ ef.extra.name }}" class="pizza-row-img">
+          {% endif %}
+          <div class="pizza-row-body">
+            <div class="pizza-info">
+              <span class="pizza-row-name">{{ ef.extra.name }}</span>
+              <span class="pizza-row-desc">{{ ef.extra.description }}</span>
+            </div>
+            <div class="pizza-row-right">
+              <span class="pizza-row-price">{{ ef.extra.price }} kr</span>
+              <div class="stepper">
+                <button type="button" class="stepper-btn extra-minus" data-field="{{ ef.field.html_name }}">−</button>
+                <input type="number" name="{{ ef.field.html_name }}" id="{{ ef.field.html_name }}"
+                       value="{{ ef.field.value|default:0 }}" min="0" max="20" class="stepper-input" readonly>
+                <button type="button" class="stepper-btn extra-plus" data-field="{{ ef.field.html_name }}">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
-    <!-- ── Step 2: Tidslinje ──────────────────── -->
+    <!-- ── Step 2: Tidspunkt ──────────────────── -->
     <div class="step-block" id="step-timeline" style="display:none;">
       <h2 class="form-section-title">
         <span class="step-num">2</span> Hvornår vil du hente?
       </h2>
-      <p class="body-text" id="timeline-hint">Svæv over tidslinjen for at vælge dit afhentningstidspunkt.</p>
+      <p class="body-text" id="timeline-hint">Vælg et ledigt afhentningstidspunkt.</p>
 
       {% if form.slot_time.errors %}
       <p class="field-error mb-2">{{ form.slot_time.errors.0 }}</p>
       {% endif %}
 
-      <div class="timeline-outer">
-        <div class="timeline-bar" id="timeline-bar"></div>
-        <div class="timeline-labels" id="timeline-labels"></div>
-      </div>
+      <div class="slot-grid" id="slot-grid"></div>
 
       <div class="timeline-selected" id="timeline-selected" style="display:none;">
         <span class="timeline-selected-label">Valgt tidspunkt:</span>
@@ -117,7 +142,8 @@
       <div class="mb-4">
         <label for="phone" class="form-label-custom">Telefonnummer</label>
         <input type="tel" name="phone" id="phone" class="input-custom {% if form.phone.errors %}input-error{% endif %}"
-               value="{{ form.phone.value|default:'' }}" placeholder="Så vi kan kontakte dig ved behov">
+               value="{{ form.phone.value|default:'' }}" placeholder="Så vi kan kontakte dig ved behov"
+               inputmode="numeric" pattern="[0-9]+" autocomplete="tel">
         {% if form.phone.errors %}<p class="field-error">{{ form.phone.errors.0 }}</p>{% endif %}
 
         <label for="email" class="form-label-custom" style="margin-top:1.25rem;">E-mail <span style="font-weight:400;opacity:0.6;">(valgfrit — til ordrebekræftelse)</span></label>
@@ -143,6 +169,16 @@
   }
   .step-block:last-of-type { border-bottom: none; }
 
+  .extras-subheading {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin: 2rem 0 1rem;
+  }
+
   .step-num {
     display: inline-flex;
     align-items: center;
@@ -159,46 +195,49 @@
     vertical-align: middle;
   }
 
-  /* Timeline */
-  .timeline-outer {
+  /* Slot grid */
+  .slot-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     margin-top: 1.5rem;
   }
 
-  .timeline-bar {
-    display: flex;
-    gap: 2px;
-    cursor: crosshair;
-    user-select: none;
-    width: 100%;
+  .slot-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.55rem 1rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    min-width: 5rem;
+    text-align: center;
   }
 
-  .tl-block {
-    flex: 1;
-    min-width: 4px;
-    height: 48px;
-    transition: background 0.08s;
+  .slot-available {
+    background: var(--warm);
+    color: var(--charcoal);
+    border-color: var(--warm);
+  }
+  .slot-available:hover {
+    background: #4a7c4a;
+    border-color: #4a7c4a;
+    color: #fff;
   }
 
-  .tl-available  { background: var(--warm); }
-  .tl-taken      { background: var(--stone); opacity: 0.5; cursor: not-allowed; }
-  .tl-hover      { background: #4a7c4a; }
-  .tl-hover-bad  { background: #c0392b; opacity: 0.7; }
-  .tl-selected   { background: #2d8f2d; }
-
-  .timeline-labels {
-    display: flex;
-    gap: 2px;
-    width: 100%;
-    margin-top: 4px;
-  }
-
-  .tl-label-cell {
-    flex: 1;
-    min-width: 4px;
-    font-size: 0.65rem;
+  .slot-taken {
+    background: transparent;
     color: var(--stone);
-    white-space: nowrap;
-    overflow: visible;
+    border-color: var(--stone);
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .slot-selected {
+    background: #2d8f2d;
+    border-color: #2d8f2d;
+    color: #fff;
   }
 
   /* Selected banner */
@@ -243,143 +282,81 @@
 <script>
   const TL               = {{ timeline_json|default:"{}"|safe }};
   const PIZZAS           = {{ pizzas_json|default:"[]"|safe }};
+  const EXTRAS           = {{ extras_json|default:"[]"|safe }};
   const PRESELECTED_SLOT = "{{ form.slot_time.value|default:'' }}";
 
-  let pizzaCount    = 0;
-  let hoverIndex    = -1;
-  let selectedIndex = -1;
+  const IS_TODAY = {{ is_today|yesno:"true,false" }};
 
-  const takenSet   = new Set(TL.taken_offsets || []);
-  const totalBlocks = (TL.total_minutes || 0) / 5;
+  let pizzaCount = 0;
+  const takenSet = new Set(TL.taken_slots || []);
 
-  /* ── Helpers ───────────────────────────── */
-  function offsetToTime(offsetMinutes) {
-    const totalMin = TL.start_hour * 60 + TL.start_minute + offsetMinutes;
-    const h = Math.floor(totalMin / 60) % 24;
-    const m = totalMin % 60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  function slotIsPast(timeStr) {
+    if (!IS_TODAY) return false;
+    const now = new Date();
+    const [h, m] = timeStr.split(':').map(Number);
+    return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
   }
 
-  function windowHasConflict(endIndex) {
-    for (let i = endIndex - pizzaCount + 1; i <= endIndex; i++) {
-      if (takenSet.has(i * 5)) return true;
-    }
-    return false;
-  }
+  /* ── Build slot grid ───────────────────── */
+  function buildSlots() {
+    const grid = document.getElementById('slot-grid');
+    grid.innerHTML = '';
 
-  function windowFitsInOpening(endIndex) {
-    return endIndex - pizzaCount + 1 >= 0 && endIndex < totalBlocks;
-  }
+    const startH   = TL.start_hour   ?? 16;
+    const startM   = TL.start_minute ?? 0;
+    const totalMin = TL.total_minutes ?? 180;
 
-  function scrollToEl(el) {
-    const navHeight = document.querySelector('.site-nav')?.offsetHeight || 0;
-    const top = el.getBoundingClientRect().top + window.scrollY - navHeight - 24;
-    window.scrollTo({ top, behavior: 'smooth' });
-  }
+    for (let offset = 0; offset < totalMin; offset += 15) {
+      const totalMinutes = startH * 60 + startM + offset;
+      const h   = Math.floor(totalMinutes / 60) % 24;
+      const m   = totalMinutes % 60;
+      const label = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const taken = takenSet.has(label) || slotIsPast(label);
 
-  /* ── Find nearest valid slot ──────────── */
-  function findNearest(fromIndex) {
-    for (let d = 0; d < totalBlocks; d++) {
-      const candidates = d === 0 ? [fromIndex] : [fromIndex + d, fromIndex - d];
-      for (const candidate of candidates) {
-        if (windowFitsInOpening(candidate) && !windowHasConflict(candidate)) return candidate;
+      const btn = document.createElement('button');
+      btn.type         = 'button';
+      btn.textContent  = label;
+      btn.className    = `slot-btn ${taken ? 'slot-taken' : 'slot-available'}`;
+      btn.disabled     = taken;
+      btn.dataset.time = label;
+
+      if (!taken) {
+        btn.addEventListener('click', () => selectSlot(label, btn));
       }
-    }
-    return -1;
-  }
 
-  /* ── Build timeline ────────────────────── */
-  function buildTimeline() {
-    const bar    = document.getElementById('timeline-bar');
-    const labels = document.getElementById('timeline-labels');
-    bar.innerHTML    = '';
-    labels.innerHTML = '';
-
-    for (let i = 0; i < totalBlocks; i++) {
-      const block = document.createElement('div');
-      block.className = 'tl-block';
-      block.dataset.index = i;
-
-      block.addEventListener('mouseenter', () => {
-        if (selectedIndex >= 0) return;
-        if (!windowFitsInOpening(i)) { hoverIndex = -1; renderBlocks(); return; }
-        hoverIndex = i;
-        renderBlocks();
-      });
-
-      block.addEventListener('mouseleave', () => {
-        if (selectedIndex >= 0) return;
-        hoverIndex = -1;
-        renderBlocks();
-      });
-
-      block.addEventListener('click', () => {
-        const target = windowFitsInOpening(i) && !windowHasConflict(i) ? i : findNearest(i);
-        if (target < 0) return;
-        selectIndex(target);
-      });
-
-      bar.appendChild(block);
-
-      const labelCell = document.createElement('div');
-      labelCell.className = 'tl-label-cell';
-      if (i % 6 === 0) labelCell.textContent = offsetToTime(i * 5);
-      labels.appendChild(labelCell);
-    }
-
-    renderBlocks();
-
-    if (PRESELECTED_SLOT) {
-      const [h, m] = PRESELECTED_SLOT.split(':').map(Number);
-      const offsetMin = (h * 60 + m) - (TL.start_hour * 60 + TL.start_minute);
-      const pickupIdx = offsetMin / 5 + pizzaCount - 1;
-      if (pickupIdx >= 0 && pickupIdx < totalBlocks) selectIndex(pickupIdx, true);
+      grid.appendChild(btn);
     }
   }
 
-  function renderBlocks() {
-    const blocks = document.querySelectorAll('.tl-block');
-    blocks.forEach((block, i) => {
-      const taken    = takenSet.has(i * 5);
-      const inSelect = selectedIndex >= 0 && i >= selectedIndex - pizzaCount + 1 && i <= selectedIndex;
-      const inHover  = hoverIndex   >= 0 && i >= hoverIndex   - pizzaCount + 1 && i <= hoverIndex;
-
-      block.className = 'tl-block';
-      if (inSelect) {
-        block.classList.add('tl-selected');
-      } else if (taken) {
-        block.classList.add('tl-taken');
-      } else if (inHover) {
-        block.classList.add(windowHasConflict(hoverIndex) ? 'tl-hover-bad' : 'tl-hover');
-      } else {
-        block.classList.add('tl-available');
-      }
+  function selectSlot(time, btnEl) {
+    document.querySelectorAll('.slot-btn.slot-selected').forEach(b => {
+      b.classList.remove('slot-selected');
+      b.classList.add('slot-available');
     });
-  }
 
-  function selectIndex(i, silent = false) {
-    selectedIndex = i;
-    hoverIndex    = -1;
-    const pickupTime = offsetToTime(i * 5);
-    const cookStart  = offsetToTime((i - pizzaCount + 1) * 5);
-    document.getElementById('slot_time_input').value = cookStart;
-    document.getElementById('timeline-selected-time').textContent = `kl. ${pickupTime}`;
+    btnEl.classList.remove('slot-available');
+    btnEl.classList.add('slot-selected');
+
+    document.getElementById('slot_time_input').value = time;
+    document.getElementById('timeline-selected-time').textContent = `kl. ${time}`;
     document.getElementById('timeline-selected').style.display = '';
-    renderBlocks();
 
-    const stepContact = document.getElementById('step-contact');
-    stepContact.style.display = '';
+    document.getElementById('step-contact').style.display = '';
     document.getElementById('submit-btn').disabled = false;
   }
 
-  document.getElementById('timeline-clear')?.addEventListener('click', () => {
-    selectedIndex = -1;
+  function clearSelection() {
+    document.querySelectorAll('.slot-btn.slot-selected').forEach(b => {
+      b.classList.remove('slot-selected');
+      b.classList.add('slot-available');
+    });
     document.getElementById('slot_time_input').value = '';
     document.getElementById('timeline-selected').style.display = 'none';
     document.getElementById('step-contact').style.display = 'none';
     document.getElementById('submit-btn').disabled = true;
-    renderBlocks();
-  });
+  }
+
+  document.getElementById('timeline-clear')?.addEventListener('click', clearSelection);
 
   /* ── Stepper ───────────────────────────── */
   function getTotal() {
@@ -396,28 +373,18 @@
 
     const stepTimeline = document.getElementById('step-timeline');
     if (pizzaCount > 0) {
-      if (stepTimeline.style.display === 'none') {
-        stepTimeline.style.display = '';
-      }
+      stepTimeline.style.display = '';
       document.getElementById('timeline-hint').textContent =
-        `Svæv over tidslinjen og vælg hvornår du vil hente dine ${pizzaCount} pizza${pizzaCount !== 1 ? 'er' : ''}.`;
+        `Vælg hvornår du vil hente dine ${pizzaCount} pizza${pizzaCount !== 1 ? 'er' : ''}.`;
     } else {
       stepTimeline.style.display = 'none';
       document.getElementById('step-contact').style.display = 'none';
     }
 
-    if (selectedIndex >= 0) {
-      selectedIndex = -1;
-      document.getElementById('slot_time_input').value = '';
-      document.getElementById('timeline-selected').style.display = 'none';
-      document.getElementById('step-contact').style.display = 'none';
-      document.getElementById('submit-btn').disabled = true;
-    }
-
-    renderBlocks();
+    clearSelection();
   }
 
-  document.querySelectorAll('.stepper-btn').forEach(btn => {
+  document.querySelectorAll('.stepper-btn:not(.extra-plus):not(.extra-minus)').forEach(btn => {
     btn.addEventListener('click', () => {
       const field = btn.dataset.field;
       const input = document.getElementById(field);
@@ -429,14 +396,36 @@
     });
   });
 
-  buildTimeline();
+  document.querySelectorAll('.extra-plus, .extra-minus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.field;
+      const input = document.getElementById(field);
+      let val = parseInt(input.value, 10);
+      if (btn.classList.contains('extra-plus')  && val < 20) val++;
+      if (btn.classList.contains('extra-minus') && val > 0)  val--;
+      input.value = val;
+    });
+  });
+
+  /* ── Phone: digits only ───────────────── */
+  document.getElementById('phone')?.addEventListener('input', function () {
+    const pos = this.selectionStart;
+    const cleaned = this.value.replace(/\D/g, '');
+    if (cleaned !== this.value) {
+      this.value = cleaned;
+      this.setSelectionRange(pos - 1, pos - 1);
+    }
+  });
+
+  buildSlots();
 
   if (PRESELECTED_SLOT) {
     pizzaCount = getTotal();
     if (pizzaCount > 0) {
       document.getElementById('step-timeline').style.display = '';
-      document.getElementById('step-contact').style.display = '';
-      document.getElementById('submit-btn').disabled = false;
+      buildSlots();
+      const btn = document.querySelector(`.slot-btn[data-time="${PRESELECTED_SLOT}"]`);
+      if (btn && !btn.disabled) selectSlot(PRESELECTED_SLOT, btn);
     }
   }
 </script>

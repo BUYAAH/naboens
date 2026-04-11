@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.contrib import admin
 from django.utils.html import format_html, format_html_join
 
-from .models import Ingredient, OpeningDay, Order, OrderItem, OrderStatusLog, Pizza, PizzaIngredient
+from .models import Extra, ExtraOrderItem, Ingredient, OpeningDay, Order, OrderItem, OrderStatusLog, Pizza, PizzaIngredient
 
 
 # ── Ingredient ────────────────────────────────────────────────────────────────
@@ -37,12 +37,35 @@ class PizzaAdmin(admin.ModelAdmin):
     margin_display.short_description = 'Fortjeneste'
 
 
+# ── Extra ─────────────────────────────────────────────────────────────────────
+
+@admin.register(Extra)
+class ExtraAdmin(admin.ModelAdmin):
+    list_display  = ['name', 'category', 'price', 'cost', 'margin_display', 'is_active']
+    list_editable = ['is_active']
+    ordering      = ['category', 'name']
+
+    def margin_display(self, obj):
+        if obj.margin is None:
+            return '—'
+        color = '#6b8f6b' if obj.margin >= 0 else '#a0522d'
+        return format_html('<span style="color:{};font-weight:600">{} kr</span>', color, obj.margin)
+    margin_display.short_description = 'Fortjeneste'
+
+
 # ── Order inline helpers ──────────────────────────────────────────────────────
 
 class OrderItemInline(admin.TabularInline):
     model           = OrderItem
     extra           = 0
     readonly_fields = ['pizza', 'quantity']
+    can_delete      = False
+
+
+class ExtraOrderItemInline(admin.TabularInline):
+    model           = ExtraOrderItem
+    extra           = 0
+    readonly_fields = ['extra', 'quantity']
     can_delete      = False
 
 
@@ -56,8 +79,9 @@ class OrderInline(admin.TabularInline):
 
     def pizza_summary(self, obj):
         parts = [f"{item.quantity}× {item.pizza.name}" for item in obj.items.all()]
+        parts += [f"{item.quantity}× {item.extra.name}" for item in obj.extra_items.all()]
         return ', '.join(parts) if parts else '—'
-    pizza_summary.short_description = 'Pizzaer'
+    pizza_summary.short_description = 'Bestilling'
 
 
 # ── OpeningDay ────────────────────────────────────────────────────────────────
@@ -134,12 +158,13 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter     = ['opening_day']
     ordering        = ['pickup_time']
     readonly_fields = ['pickup_time', 'total_pizzas', 'created_at']
-    inlines         = [OrderItemInline]
+    inlines         = [OrderItemInline, ExtraOrderItemInline]
 
     def pizza_summary(self, obj):
         parts = [f"{item.quantity}× {item.pizza.name}" for item in obj.items.all()]
+        parts += [f"{item.quantity}× {item.extra.name}" for item in obj.extra_items.all()]
         return ', '.join(parts) if parts else '—'
-    pizza_summary.short_description = 'Pizzaer'
+    pizza_summary.short_description = 'Bestilling'
 
 
 # ── OrderStatusLog ────────────────────────────────────────────────────────────

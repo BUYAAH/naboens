@@ -87,6 +87,7 @@ class Order(models.Model):
 
     class Meta:
         ordering = ['pickup_time']
+        unique_together = [('opening_day', 'pickup_time')]
 
     def __str__(self):
         plural = 'er' if self.total_pizzas != 1 else ''
@@ -113,3 +114,43 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}× {self.pizza.name}"
+
+
+class Extra(models.Model):
+    CATEGORY_DRINK   = 'drink'
+    CATEGORY_DESSERT = 'dessert'
+    CATEGORY_OTHER   = 'other'
+    CATEGORY_CHOICES = [
+        (CATEGORY_DRINK,   'Drikkevare'),
+        (CATEGORY_DESSERT, 'Dessert'),
+        (CATEGORY_OTHER,   'Andet'),
+    ]
+
+    name        = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    price       = models.PositiveIntegerField()
+    cost        = models.PositiveIntegerField(null=True, blank=True, help_text="Råvarepris i kr (valgfrit)")
+    category    = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default=CATEGORY_OTHER)
+    image       = models.ImageField(upload_to='extras/', blank=True, null=True)
+    is_active   = models.BooleanField(default=True)
+
+    @property
+    def margin(self):
+        if self.cost is None:
+            return None
+        return self.price - self.cost
+
+    class Meta:
+        ordering = ['category', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class ExtraOrderItem(models.Model):
+    order    = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='extra_items')
+    extra    = models.ForeignKey(Extra, on_delete=models.PROTECT, related_name='order_items')
+    quantity = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.quantity}× {self.extra.name}"

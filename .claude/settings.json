@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations)",
+      "Read(//c/Users/Marti/Programming/django/pizza/**)",
+      "Bash(../venv/Scripts/python manage.py makemigrations)",
+      "Bash(../venv/Scripts/python -c \"from core import views; print\\('OK'\\)\")"
+    ]
+  }
+}

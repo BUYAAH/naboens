@@ -37,6 +37,12 @@
       <span class="bk-value">{{ item.pizza.name }}</span>
     </div>
     {% endfor %}
+    {% for item in order.extra_items.all %}
+    <div class="bk-row">
+      <span class="bk-label">{{ item.quantity }}×</span>
+      <span class="bk-value">{{ item.extra.name }}</span>
+    </div>
+    {% endfor %}
     <div class="bk-row">
       <span class="bk-label">I alt</span>
       <span class="bk-value"><strong>{{ total_price }} kr</strong></span>
