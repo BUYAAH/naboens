@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.contrib import admin
 from django.utils.html import format_html, format_html_join
 
-from .models import Extra, ExtraOrderItem, Ingredient, OpeningDay, Order, OrderItem, OrderStatusLog, Pizza, PizzaIngredient
+from .models import Extra, ExtraIngredient, ExtraOrderItem, Ingredient, OpeningDay, Order, OrderItem, OrderStatusLog, Pizza, PizzaIngredient
 
 
 # ── Ingredient ────────────────────────────────────────────────────────────────
@@ -39,11 +39,18 @@ class PizzaAdmin(admin.ModelAdmin):
 
 # ── Extra ─────────────────────────────────────────────────────────────────────
 
+class ExtraIngredientInline(admin.TabularInline):
+    model  = ExtraIngredient
+    extra  = 1
+    fields = ['ingredient', 'quantity']
+
+
 @admin.register(Extra)
 class ExtraAdmin(admin.ModelAdmin):
     list_display  = ['name', 'category', 'price', 'cost', 'margin_display', 'is_active']
     list_editable = ['is_active']
     ordering      = ['category', 'name']
+    inlines       = [ExtraIngredientInline]
 
     def margin_display(self, obj):
         if obj.margin is None:
@@ -120,11 +127,18 @@ class OpeningDayAdmin(admin.ModelAdmin):
     def ingredient_totals(self, obj):
         """Total ingredient quantities needed across all orders for this day."""
         totals = defaultdict(float)
-        for order in obj.orders.prefetch_related('items__pizza__pizza_ingredients__ingredient').all():
+        for order in obj.orders.prefetch_related(
+            'items__pizza__pizza_ingredients__ingredient',
+            'extra_items__extra__extra_ingredients__ingredient',
+        ).all():
             for item in order.items.all():
                 for pi in item.pizza.pizza_ingredients.select_related('ingredient').all():
                     key = (pi.ingredient.name, pi.ingredient.unit)
                     totals[key] += float(pi.quantity) * item.quantity
+            for item in order.extra_items.all():
+                for ei in item.extra.extra_ingredients.select_related('ingredient').all():
+                    key = (ei.ingredient.name, ei.ingredient.unit)
+                    totals[key] += float(ei.quantity) * item.quantity
 
         if not totals:
             return 'Ingen ingredienser registreret endnu.'

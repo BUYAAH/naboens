@@ -210,7 +210,7 @@ def opening_day(request, pk):
     opening = get_object_or_404(OpeningDay, pk=pk)
     orders  = opening.orders.prefetch_related(
         'items__pizza__pizza_ingredients__ingredient',
-        'extra_items__extra',
+        'extra_items__extra__extra_ingredients__ingredient',
     ).order_by('pickup_time')
 
     # Per-pizza totals
@@ -227,6 +227,10 @@ def opening_day(request, pk):
             for pi in item.pizza.pizza_ingredients.select_related('ingredient').all():
                 key = (pi.ingredient.name, pi.ingredient.unit)
                 ingredient_totals[key] += float(pi.quantity) * item.quantity
+        for item in order.extra_items.all():
+            for ei in item.extra.extra_ingredients.select_related('ingredient').all():
+                key = (ei.ingredient.name, ei.ingredient.unit)
+                ingredient_totals[key] += float(ei.quantity) * item.quantity
     ingredient_totals = sorted(ingredient_totals.items())  # [((name, unit), qty), …]
 
     # Capacity (15-min slot model: 1 order per slot)

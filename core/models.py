@@ -147,6 +147,18 @@ class Extra(models.Model):
         return self.name
 
 
+class ExtraIngredient(models.Model):
+    extra      = models.ForeignKey(Extra, on_delete=models.CASCADE, related_name='extra_ingredients')
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name='extra_ingredients')
+    quantity   = models.DecimalField(max_digits=8, decimal_places=2)
+
+    class Meta:
+        unique_together = ('extra', 'ingredient')
+
+    def __str__(self):
+        return f"{self.extra} — {self.quantity} {self.ingredient.unit} {self.ingredient.name}"
+
+
 class ExtraOrderItem(models.Model):
     order    = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='extra_items')
     extra    = models.ForeignKey(Extra, on_delete=models.PROTECT, related_name='order_items')
