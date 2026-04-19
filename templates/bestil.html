@@ -29,12 +29,35 @@
     <a href="/" class="btn-outline-dark-custom mt-4">Tilbage til forsiden</a>
   </div>
 
+  {% elif ordering_not_open %}
+  <div class="bestil-empty text-center">
+    <span class="label">Næste åbning · {{ opening.date|date:"l d. F"|da }}</span>
+    <h1 class="section-heading">Bestilling er ikke åben endnu</h1>
+    <p class="body-text mx-auto" style="max-width:420px;">
+      Du kan bestille fra {{ opening.order_opens|date:"l d. F"|da }} kl. {{ opening.order_opens|time:"H:i" }}.
+    </p>
+    <a href="/" class="btn-outline-dark-custom mt-4" style="color:var(--charcoal);border-color:var(--charcoal);">Tilbage til forsiden</a>
+  </div>
+
+  {% elif deadline_passed %}
+  <div class="bestil-empty text-center">
+    <span class="label">Næste åbning · {{ opening.date|date:"l d. F"|da }}</span>
+    <h1 class="section-heading">Bestilling er lukket</h1>
+    <p class="body-text mx-auto" style="max-width:420px;">
+      Fristen for at bestille til denne dag er desværre overskredet.
+    </p>
+    <a href="/" class="btn-outline-dark-custom mt-4" style="color:var(--charcoal);border-color:var(--charcoal);">Tilbage til forsiden</a>
+  </div>
+
   {% else %}
 
   <div class="bestil-header text-center">
     <span class="label">Næste åbning</span>
     <h1 class="section-heading">Bestil til {{ opening.date|date:"l d. F"|da }}</h1>
     <p class="body-text">Kl. {{ opening.start_time|time:"H:i" }}–{{ opening.close_time|time:"H:i" }} &nbsp;·&nbsp; Afhentning på Tranevej 50 &nbsp;·&nbsp; Betaling på stedet</p>
+    {% if opening.order_deadline %}
+    <p class="body-text" style="margin-top:0.4rem;font-size:0.85rem;opacity:0.7;">Bestilling lukker {{ opening.order_deadline|date:"l d. F"|da }} kl. {{ opening.order_deadline|time:"H:i" }}</p>
+    {% endif %}
   </div>
 
   {% if form.non_field_errors %}

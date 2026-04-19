@@ -22,6 +22,16 @@
       <span class="label">Pizzamaker · Dashboard</span>
       <h1 class="section-heading" style="margin-bottom:0.25rem;">{{ opening.date|date:"l d. F Y"|da }}</h1>
       <p class="body-text" style="margin:0;">Kl. {{ opening.start_time|time:"H:i" }}–{{ opening.close_time|time:"H:i" }}</p>
+      {% if opening.order_opens %}
+      <p class="body-text" style="margin:0.25rem 0 0;font-size:0.82rem;opacity:0.65;">
+        Bestilling åbner {{ opening.order_opens|date:"l d. F"|da }} kl. {{ opening.order_opens|time:"H:i" }}
+      </p>
+      {% endif %}
+      {% if opening.order_deadline %}
+      <p class="body-text" style="margin:0.25rem 0 0;font-size:0.82rem;opacity:0.65;">
+        Bestilling lukker {{ opening.order_deadline|date:"l d. F"|da }} kl. {{ opening.order_deadline|time:"H:i" }}
+      </p>
+      {% endif %}
     </div>
     {% if not opening.is_published %}
     <span class="dag-status-badge">Ikke publiceret</span>

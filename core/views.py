@@ -71,6 +71,15 @@ def bestil(request):
     if not opening:
         return render(request, "bestil.html", {'opening': None})
 
+    now = timezone.now()
+    ordering_not_open = bool(opening.order_opens and now < opening.order_opens)
+    deadline_passed   = bool(opening.order_deadline and now > opening.order_deadline)
+
+    if deadline_passed:
+        return render(request, "bestil.html", {'opening': opening, 'deadline_passed': True})
+    if ordering_not_open:
+        return render(request, "bestil.html", {'opening': opening, 'ordering_not_open': True})
+
     start_dt      = datetime.combine(opening.date, opening.start_time)
     close_dt      = datetime.combine(opening.date, opening.close_time)
     total_minutes = int((close_dt - start_dt).total_seconds() / 60)
@@ -89,7 +98,11 @@ def bestil(request):
 
     if request.method == 'POST':
         form = OrderForm(request.POST, pizzas=pizzas, extras=extras)
-        if form.is_valid():
+        if opening.order_opens and timezone.now() < opening.order_opens:
+            form.add_error(None, 'Bestilling er endnu ikke åben.')
+        elif opening.order_deadline and timezone.now() > opening.order_deadline:
+            form.add_error(None, 'Bestilling er desværre lukket — fristen er overskredet.')
+        elif form.is_valid():
             data          = form.cleaned_data
             total         = data['total_pizzas']
             slot_time_str = data['slot_time']

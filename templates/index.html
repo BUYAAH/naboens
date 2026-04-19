@@ -8,7 +8,11 @@
 {% if upcoming %}
 <div class="opening-banner">
     Vi åbner <strong>{{ upcoming.date|date:"l d. F" }}</strong> kl. {{ upcoming.start_time|time:"H:i" }}–{{ upcoming.close_time|time:"H:i" }} &nbsp;·&nbsp;
+    {% if upcoming.ordering_open %}
     <a href="{% url 'bestil' %}">Bestil din plads nu &rarr;</a>
+    {% else %}
+    Bestilling åbner {{ upcoming.order_opens|date:"d. F"|da }} kl. {{ upcoming.order_opens|time:"H:i" }}
+    {% endif %}
 </div>
 {% endif %}
 
@@ -21,17 +25,29 @@
         <li><a href="#menu">Menu</a></li>
         <li><a href="#hours">Åbningstider</a></li>
         <li><a href="#contact">Kontakt</a></li>
-        <li><a href="{% url 'bestil' %}" style="color:var(--cream);">Bestil</a></li>
+        {% if upcoming and upcoming.ordering_open %}<li><a href="{% url 'bestil' %}" style="color:var(--cream);">Bestil</a></li>{% endif %}
     </ul>
 </nav>
 
 <!-- Hero -->
 <section id="hero" class="hero d-flex align-items-center justify-content-center text-center">
     <div>
-        <p class="eyebrow" data-aos="fade-down" data-aos-delay="100">Napolitansk pizza. Hjemmelavet</p>
+        <p class="eyebrow" data-aos="fade-down" data-aos-delay="100">Napolitansk pizza. Fra køkkenet herhjemme.</p>
         <h1 class="brand" data-aos="fade-up" data-aos-delay="200">Naboens Pizza</h1>
-        <p class="tagline" data-aos="fade-up" data-aos-delay="350">Luftig dej. Gode råvarer. Fra køkkenet herhjemme.</p>
+        {% if upcoming %}
+        <div class="hero-next-opening" data-aos="fade-up" data-aos-delay="500">
+            <span class="hero-next-label">Næste åbningsdag</span>
+            <span class="hero-next-date">{{ upcoming.date|date:"l d. F"|da }} &nbsp;·&nbsp; kl. {{ upcoming.start_time|time:"H:i" }}–{{ upcoming.close_time|time:"H:i" }}</span>
+            {% if upcoming.ordering_open %}
+            <a href="{% url 'bestil' %}" class="btn-outline-dark-custom" style="margin-top:1.75rem;">Bestil til {{ upcoming.date|date:"l d. F"|da }}</a>
+            {% else %}
+            {% if upcoming.order_opens %}<span class="hero-next-sub">Bestilling åbner {{ upcoming.order_opens|date:"l d. F"|da }} kl. {{ upcoming.order_opens|time:"H:i" }}</span>{% endif %}
+            <a href="#hours" class="hero-next-hours-link">Åbningstider</a>
+            {% endif %}
+        </div>
+        {% else %}
         <a href="#hours" class="btn-outline-dark-custom mt-4" data-aos="fade-up" data-aos-delay="500">Se næste åbning</a>
+        {% endif %}
     </div>
 </section>
 
@@ -99,7 +115,7 @@
             <span class="dots"></span>
             <span class="time">{{ day.date|date:"l d. F"|da }} &nbsp;·&nbsp; {{ day.start_time|time:"H:i" }}–{{ day.close_time|time:"H:i" }}</span>
         </div>
-        {% empty %}
+{% empty %}
         <div class="hours-row">
             <span class="day">Næste åbning</span>
             <span class="dots"></span>
@@ -115,7 +131,7 @@
     <p class="body-text mt-4" style="max-width:440px;margin-inline:auto;" data-aos="fade-up" data-aos-delay="200">
         Afhentning sker på Tranevej 50 · Betaling på stedet
     </p>
-    {% if upcoming %}
+    {% if upcoming and upcoming.ordering_open %}
     <a href="{% url 'bestil' %}" class="btn-primary-dark mt-4" data-aos="fade-up" data-aos-delay="250">Bestil til {{ upcoming.date|date:"d. F"|da }} →</a>
     {% endif %}
 </section>

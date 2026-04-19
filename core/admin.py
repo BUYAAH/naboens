@@ -96,7 +96,7 @@ class OrderInline(admin.TabularInline):
 @admin.register(OpeningDay)
 class OpeningDayAdmin(admin.ModelAdmin):
     list_display    = [
-        'date', 'start_time', 'close_time',
+        'date', 'start_time', 'close_time', 'order_opens', 'order_deadline',
         'is_published', 'total_pizzas_ordered', 'capacity_bar',
     ]
     list_editable   = ['is_published']
@@ -105,22 +105,23 @@ class OpeningDayAdmin(admin.ModelAdmin):
 
     def capacity_bar(self, obj):
         from datetime import datetime
-        start_dt  = datetime.combine(obj.date, obj.start_time)
-        close_dt  = datetime.combine(obj.date, obj.close_time)
-        total_cap = int((close_dt - start_dt).total_seconds() / 60) // 5
-        total_tak = obj.total_pizzas_ordered()
+        start_dt   = datetime.combine(obj.date, obj.start_time)
+        close_dt   = datetime.combine(obj.date, obj.close_time)
+        total_cap  = int((close_dt - start_dt).total_seconds() / 60) // 15
+        slots_used = obj.orders.count()
+        slots_free = max(total_cap - slots_used, 0)
         if total_cap == 0:
             return '—'
-        pct   = int(total_tak / total_cap * 100)
+        pct   = int(slots_used / total_cap * 100)
         color = '#a0522d' if pct >= 80 else '#6b8f6b' if pct >= 40 else '#b5aca0'
         return format_html(
             '<div style="display:flex;align-items:center;gap:8px;">'
             '<div style="width:80px;height:8px;background:#eee;border-radius:4px;overflow:hidden;">'
             '<div style="width:{}%;height:100%;background:{};border-radius:4px;"></div>'
             '</div>'
-            '<span style="font-size:0.8rem;color:#555;">{} / {} pizzaer</span>'
+            '<span style="font-size:0.8rem;color:#555;">{} optaget · {} ledige</span>'
             '</div>',
-            pct, color, total_tak, total_cap,
+            pct, color, slots_used, slots_free,
         )
     capacity_bar.short_description = 'Kapacitet'
 

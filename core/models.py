@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Ingredient(models.Model):
@@ -48,10 +49,21 @@ class PizzaIngredient(models.Model):
 
 
 class OpeningDay(models.Model):
-    date                  = models.DateField()
+    date                  = models.DateField(unique=True)
     start_time            = models.TimeField()
     close_time            = models.TimeField()
+    order_opens           = models.DateTimeField(null=True, blank=True, help_text="Tidspunkt hvor bestilling åbner (tomt = åbner med det samme)")
+    order_deadline        = models.DateTimeField(null=True, blank=True, help_text="Tidspunkt hvor bestilling lukker (kan være dage før åbning)")
     is_published          = models.BooleanField(default=False)
+
+    @property
+    def ordering_open(self):
+        now = timezone.now()
+        if self.order_opens and now < self.order_opens:
+            return False
+        if self.order_deadline and now > self.order_deadline:
+            return False
+        return True
 
     class Meta:
         ordering = ['date', 'start_time']

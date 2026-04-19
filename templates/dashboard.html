@@ -25,6 +25,12 @@
       <div class="dag-card-left">
         <span class="dag-card-date">{{ day.date|date:"l d. F Y"|da }}</span>
         <span class="dag-card-time">{{ day.start_time|time:"H:i" }} – {{ day.close_time|time:"H:i" }}</span>
+        {% if day.order_opens %}
+        <span class="dag-card-deadline">Bestilling åbner {{ day.order_opens|date:"d/m"|da }} kl. {{ day.order_opens|time:"H:i" }}</span>
+        {% endif %}
+        {% if day.order_deadline %}
+        <span class="dag-card-deadline">Bestilling lukker {{ day.order_deadline|date:"d/m"|da }} kl. {{ day.order_deadline|time:"H:i" }}</span>
+        {% endif %}
       </div>
       <div class="dag-card-right">
         <span class="dag-card-count">{{ day.total_pizzas_ordered }} pizzaer</span>
@@ -91,6 +97,12 @@
   .dag-card-time {
     font-size: 0.8rem;
     color: var(--stone);
+  }
+
+  .dag-card-deadline {
+    font-size: 0.72rem;
+    color: var(--stone);
+    opacity: 0.75;
   }
 
   .dag-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; }
