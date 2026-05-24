@@ -79,6 +79,8 @@ def bestil(request):
         return render(request, "bestil.html", {'opening': opening, 'deadline_passed': True})
     if ordering_not_open:
         return render(request, "bestil.html", {'opening': opening, 'ordering_not_open': True})
+    if opening.is_fully_booked:
+        return render(request, "bestil.html", {'opening': opening, 'fully_booked': True})
 
     start_dt      = datetime.combine(opening.date, opening.start_time)
     close_dt      = datetime.combine(opening.date, opening.close_time)

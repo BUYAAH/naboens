@@ -125,6 +125,7 @@ class OpeningDayAdmin(admin.ModelAdmin):
         )
     capacity_bar.short_description = 'Kapacitet'
 
+
     def ingredient_totals(self, obj):
         """Total ingredient quantities needed across all orders for this day."""
         totals = defaultdict(float)

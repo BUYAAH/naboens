@@ -8,7 +8,9 @@
 {% if upcoming %}
 <div class="opening-banner">
     Vi åbner <strong>{{ upcoming.date|date:"l d. F" }}</strong> kl. {{ upcoming.start_time|time:"H:i" }}–{{ upcoming.close_time|time:"H:i" }} &nbsp;·&nbsp;
-    {% if upcoming.ordering_open %}
+    {% if upcoming.ordering_open and upcoming.is_fully_booked %}
+    <span class="badge-udsolgt">Udsolgt</span>
+    {% elif upcoming.ordering_open %}
     <a href="{% url 'bestil' %}">Bestil din plads nu &rarr;</a>
     {% else %}
     Bestilling åbner {{ upcoming.order_opens|date:"d. F"|da }} kl. {{ upcoming.order_opens|time:"H:i" }}
@@ -39,7 +41,11 @@
             <span class="hero-next-label">Næste åbningsdag</span>
             <span class="hero-next-date">{{ upcoming.date|date:"l d. F"|da }} &nbsp;·&nbsp; kl. {{ upcoming.start_time|time:"H:i" }}–{{ upcoming.close_time|time:"H:i" }}</span>
             {% if upcoming.ordering_open %}
+            {% if upcoming.is_fully_booked %}
+            <span class="badge-udsolgt">Udsolgt</span>
+            {% else %}
             <a href="{% url 'bestil' %}" class="btn-outline-dark-custom" style="margin-top:1.75rem;">Bestil til {{ upcoming.date|date:"l d. F"|da }}</a>
+            {% endif %}
             {% else %}
             {% if upcoming.order_opens %}<span class="hero-next-sub">Bestilling åbner {{ upcoming.order_opens|date:"l d. F"|da }} kl. {{ upcoming.order_opens|time:"H:i" }}</span>{% endif %}
             <a href="#hours" class="hero-next-hours-link">Åbningstider</a>
@@ -131,7 +137,7 @@
     <p class="body-text mt-4" style="max-width:440px;margin-inline:auto;" data-aos="fade-up" data-aos-delay="200">
         Afhentning sker på Tranevej 50 · Betaling på stedet
     </p>
-    {% if upcoming and upcoming.ordering_open %}
+    {% if upcoming and upcoming.ordering_open and not upcoming.is_fully_booked %}
     <a href="{% url 'bestil' %}" class="btn-primary-dark mt-4" data-aos="fade-up" data-aos-delay="250">Bestil til {{ upcoming.date|date:"d. F"|da }} →</a>
     {% endif %}
 </section>

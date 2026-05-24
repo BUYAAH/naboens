@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from django.utils import timezone
 
@@ -70,6 +72,13 @@ class OpeningDay(models.Model):
 
     def __str__(self):
         return f"{self.date} ({self.start_time.strftime('%H:%M')}–{self.close_time.strftime('%H:%M')})"
+
+    @property
+    def is_fully_booked(self):
+        start_dt = datetime.combine(self.date, self.start_time)
+        close_dt = datetime.combine(self.date, self.close_time)
+        total_slots = int((close_dt - start_dt).total_seconds() / 60) // 15
+        return total_slots > 0 and self.orders.count() >= total_slots
 
     def total_pizzas_ordered(self):
         return sum(o.total_pizzas for o in self.orders.all())

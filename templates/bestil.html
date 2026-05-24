@@ -49,6 +49,16 @@
     <a href="/" class="btn-outline-dark-custom mt-4" style="color:var(--charcoal);border-color:var(--charcoal);">Tilbage til forsiden</a>
   </div>
 
+  {% elif fully_booked %}
+  <div class="bestil-empty text-center">
+    <span class="label">Næste åbning · {{ opening.date|date:"l d. F"|da }}</span>
+    <h1 class="section-heading">Udsolgt</h1>
+    <p class="body-text mx-auto" style="max-width:420px;">
+      Alle afhentningstidspunkter til denne dag er desværre optaget.
+    </p>
+    <a href="/" class="btn-outline-dark-custom mt-4" style="color:var(--charcoal);border-color:var(--charcoal);">Tilbage til forsiden</a>
+  </div>
+
   {% else %}
 
   <div class="bestil-header text-center">
